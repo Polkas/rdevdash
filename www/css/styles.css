@@ -1,0 +1,37 @@
+.box-body {
+    padding: 20px;
+}
+
+.box-header {
+    font-weight: bold;
+}
+
+.important-text {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+li>.form-group {
+    margin-bottom: 8px !important;
+}
+
+li .form-control {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .search-input {
+        width: 300px;
+        margin-right: 5px;
+        margin-left: 5px;
+        margin-top: 8px;
+    }
+}
+
+@media (min-width: 768px) {
+    .search-input {
+        width: 375px;
+        margin-top: 8px;
+    }
+}

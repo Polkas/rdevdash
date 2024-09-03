@@ -12,34 +12,12 @@ library(dplyr)
 
 options(repos = c(CRAN = "http://cran.rstudio.com/"))
 
-list_to_html_table <- function(dic1) {
-  tags$table(
-    class = "table table-striped",
-    tags$thead(
-      tags$tr(
-        tags$th(""),
-        tags$th(paste("Version:", dic1[["Version"]])),
-      )
-    ),
-    tags$tbody(
-      tagList(
-        lapply(names(dic1), function(e) {
-          tags$tr(
-            tags$th(e),
-            tags$td(dic1[[e]])
-          )
-        })
-      )
-    )
-  )
-}
-
 app_ui <- function(request) {
   av_cran <- "https://cran.r-project.org/web/packages/available_packages_by_name.html"
 
   dashboardPage(
     skin = "blue",
-
+    title = "R Dev Dashboard",
     dashboardHeader(
       title = tags$span(
         tags$img(
@@ -83,44 +61,10 @@ app_ui <- function(request) {
     ),
 
     dashboardBody(
-      tags$head(
-        tags$style(HTML("
-        .box-body {
-          padding: 20px;
-        }
-        .box-header {
-          font-weight: bold;
-        }
-        .important-text {
-          font-size: 2rem;
-          font-weight:bold;
-        }
-        li > .form-group {
-          margin-bottom:8px!important;
-        }
-        li .form-control {
-          font-size:16px;
-          font-weight:bold;
-        }
 
-        @media (max-width: 768px) {
-        .search-input {
-          width: 300px;
-          margin-right:5px;
-          margin-left:5px;
-          margin-top:8px;
-        }
-        }
+      tags$head(tags$link(rel = "icon", type = "image/x-icon", href = "images/favicon.ico")),
+      tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css")),
 
-        @media (min-width: 768px) {
-        .search-input {
-          width: 375px;
-          margin-top:8px;
-        }
-        }
-
-      "))
-      ),
       tabItems(
         tabItem(
           tabName = "package_info",
@@ -638,7 +582,25 @@ app_server <- function(input, output, session) {
       Suggests = get_description()[["Suggests"]],
       Enhance = get_description()[["Enhance"]]
     )
-    list_to_html_table(result)
+    tags$table(
+      class = "table table-striped",
+      tags$thead(
+        tags$tr(
+          tags$th(""),
+          tags$th(paste("Version:", result[["Version"]])),
+        )
+      ),
+      tags$tbody(
+        tagList(
+          lapply(names(result), function(e) {
+            tags$tr(
+              tags$th(e),
+              tags$td(dic1[[e]])
+            )
+          })
+        )
+      )
+    )
   })
 
   output$bugreports <- renderUI({

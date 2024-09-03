@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 *.Rproj
+/images
+.DS_Store
+/rsconnect
