@@ -10,6 +10,8 @@ library(lubridate)
 library(cranlogs)
 library(dplyr)
 
+options(repos = c(CRAN = "http://cran.rstudio.com/"))
+
 list_to_html_table <- function(dic1) {
   tags$table(
     class = "table table-striped",
@@ -38,7 +40,6 @@ app_ui <- function(request) {
   dashboardPage(
     skin = "blue",
 
-    # Dashboard Header
     dashboardHeader(
       title = tags$span(
         tags$img(
@@ -68,7 +69,6 @@ app_ui <- function(request) {
       titleWidth = 250
     ),
 
-    # Dashboard Sidebar
     dashboardSidebar(
       width = 250,
       sidebarMenu(
@@ -82,7 +82,6 @@ app_ui <- function(request) {
       )
     ),
 
-    # Dashboard Body (Main Content)
     dashboardBody(
       tags$head(
         tags$style(HTML("
@@ -243,7 +242,6 @@ app_ui <- function(request) {
           )
         ),
 
-        # Package Downloads Tab
         tabItem(
           tabName = "downloads",
           fluidRow(
@@ -268,7 +266,6 @@ app_ui <- function(request) {
           )
         ),
 
-        # DESCRIPTION Diff Tab
         tabItem(
           tabName = "version_diff",
           fluidRow(
@@ -296,7 +293,6 @@ app_ui <- function(request) {
           )
         ),
 
-        # CRAN Check Results Tab
         tabItem(
           tabName = "cran_check",
           fluidRow(
@@ -320,7 +316,6 @@ app_ui <- function(request) {
           )
         ),
 
-        # Package Deps Tab
         tabItem(
           tabName = "package_deps",
           fluidRow(
@@ -370,7 +365,6 @@ app_ui <- function(request) {
           )
         ),
 
-        # CRAN Releases Tab
         tabItem(
           tabName = "cran_releases",
           fluidRow(
@@ -383,6 +377,7 @@ app_ui <- function(request) {
             )
           )
         ),
+
         tabItem(
           tabName = "about",
           fluidRow(
