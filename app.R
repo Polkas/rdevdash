@@ -322,6 +322,50 @@ app_ui <- function(request) {
           tabName = "cran_releases",
           fluidRow(
             box(
+              class = "important-text",
+              title = "Newest Release",
+              width = 4,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("newest_release"))
+            ),
+            box(
+              class = "important-text",
+              title = "Oldest Release",
+              width = 4,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("oldest_release"))
+            ),
+            box(
+              class = "important-text",
+              title = "Years on CRAN",
+              width = 4,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("years_on_cran"))
+            )
+          ),
+          fluidRow(
+            box(
+              class = "important-text",
+              title = "Number of Releases",
+              width = 6,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("number_releases"))
+            ),
+            box(
+              class = "important-text",
+              title = "Life Duration Stats",
+              width = 6,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("stat_releases"))
+            )
+          ),
+          fluidRow(
+            box(
               title = "CRAN Releases",
               width = 12,
               solidHeader = TRUE,
@@ -504,11 +548,15 @@ app_server <- function(input, output, session) {
     }
   }, )
 
-  output$releases_list <- DT::renderDataTable({
-    req(get_timemachine())
-    table <- get_timemachine() %>%
+  order_timemachine <- reactive({
+    get_timemachine() %>%
       dplyr::select(Package, Version, Released, Archived, LifeDuration) %>%
       dplyr::arrange(dplyr::desc(Released))
+  })
+
+  output$releases_list <- DT::renderDataTable({
+    req(order_timemachine())
+    table <- order_timemachine()
     if (length(table) > 0) {
       DT::datatable(table,
         options = list(
@@ -519,6 +567,33 @@ app_server <- function(input, output, session) {
     } else {
       "No releases found."
     }
+  })
+
+  newest_row <- reactive(head(order_timemachine(), 1))
+  output$newest_release <- renderText({
+    newest_row()$Version
+  })
+
+  oldest_row <- reactive(tail(order_timemachine(), 1))
+  output$oldest_release <- renderText({
+    oldest_row()$Version
+  })
+
+  output$years_on_cran <- renderText({
+    round((as.Date(newest_row()$Released) - as.Date(oldest_row()$Released)) / 365)
+  })
+
+  output$number_releases <- renderText({
+    nrow(get_timemachine())
+  })
+
+  output$stat_releases <- renderText({
+    sprintf(
+      "Min: %s, Mean: %s, Max: %s",
+      min(get_timemachine()$LifeDuration),
+      round(mean(get_timemachine()$LifeDuration)),
+      max(get_timemachine()$LifeDuration)
+    )
   })
 
   user_deps <- reactive({
