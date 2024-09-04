@@ -247,6 +247,15 @@ app_ui <- function(request) {
               solidHeader = TRUE,
               status = "primary",
               uiOutput("check_page")
+            ),
+            box(
+              class = "important-text",
+              title = "RED status",
+              width = 6,
+              solidHeader = TRUE,
+              status = "primary",
+              footer = "Whether any Flavor got Error or Fail status",
+              textOutput("red_status")
             )
           ),
           fluidRow(
@@ -641,6 +650,10 @@ app_server <- function(input, output, session) {
   output$check_page <- renderUI({
     url <- sprintf("https://cran.r-project.org/web/checks/check_results_%s.html", pac())
     tags$a(href = url, url)
+  })
+
+  output$red_status <- renderText({
+    pacs::pac_checkred(pac())
   })
 
   output$requirements <- renderText({
