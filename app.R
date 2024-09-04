@@ -487,14 +487,14 @@ app_server <- function(input, output, session) {
   })
 
   observeEvent(input$pac, {
-    req(get_timemachine)
+    req(get_timemachine())
     tags_pac <- get_timemachine()[["Version"]]
     updateSelectInput(session, "version_old", choices = tags_pac, selected = head(tail(tags_pac, 2), 1))
     updateSelectInput(session, "version_new", choices = tags_pac, selected = tail(tags_pac, 1))
   })
 
   output$dep_version_diff <- DT::renderDataTable({
-    req(pac())
+    req(isolate(pac()))
     req(input$version_old)
     req(input$version_new)
     validate(
@@ -504,7 +504,7 @@ app_server <- function(input, output, session) {
       )
     )
     DT::datatable(
-      pacs::pac_compare_versions(pac(), old = input$version_old, new = input$version_new),
+      pacs::pac_compare_versions(isolate(pac()), old = input$version_old, new = input$version_new),
       options = list(
         paging = TRUE,
         pageLength = 100,
@@ -523,7 +523,7 @@ app_server <- function(input, output, session) {
   })
 
   output$namespace_diff <- renderPrint({
-    req(pac())
+    req(isolate(pac()))
     req(input$version_old)
     req(input$version_new)
     validate(
@@ -532,7 +532,7 @@ app_server <- function(input, output, session) {
         "New version has to be higher."
       )
     )
-    pacs::pac_compare_namespace(pac(), old = input$version_old, new = input$version_new)
+    pacs::pac_compare_namespace(isolate(pac()), old = input$version_old, new = input$version_new)
   })
 
   download_pacs <- reactive({
