@@ -255,7 +255,7 @@ app_ui <- function(request) {
               solidHeader = TRUE,
               status = "primary",
               footer = "Whether any Flavor got Error or Fail status",
-              textOutput("red_status")
+              uiOutput("red_status")
             )
           ),
           fluidRow(
@@ -652,8 +652,12 @@ app_server <- function(input, output, session) {
     tags$a(href = url, url)
   })
 
-  output$red_status <- renderText({
-    pacs::pac_checkred(pac())
+  output$red_status <- renderUI({
+    status <- pacs::pac_checkred(pac())
+    tags$span(
+      style = if (isTRUE(status)) "color:red;" else "color:green;",
+      status
+    )
   })
 
   output$requirements <- renderText({
