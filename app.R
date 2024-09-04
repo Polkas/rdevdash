@@ -242,20 +242,20 @@ app_ui <- function(request) {
           fluidRow(
             box(
               class = "important-text",
-              title = "CRAN Check Page",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              uiOutput("check_page")
-            ),
-            box(
-              class = "important-text",
               title = "RED status",
               width = 6,
               solidHeader = TRUE,
               status = "primary",
               footer = "Whether any Flavor got Error or Fail status",
               uiOutput("red_status")
+            ),
+            box(
+              class = "important-text",
+              title = "CRAN Check Page",
+              width = 6,
+              solidHeader = TRUE,
+              status = "primary",
+              uiOutput("check_page")
             )
           ),
           fluidRow(
@@ -589,7 +589,7 @@ app_server <- function(input, output, session) {
       Imports = get_description()[["Imports"]],
       LinkingTo = get_description()[["LinkingTo"]],
       Suggests = get_description()[["Suggests"]],
-      Enhance = get_description()[["Enhance"]]
+      Enhances = get_description()[["Enhances"]]
     )
     tags$table(
       class = "table table-striped",
