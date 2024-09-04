@@ -190,7 +190,7 @@ app_ui <- function(request) {
           tabName = "downloads",
           fluidRow(
             box(
-              title = "Package Downloads",
+              title = "Package Downloads Plot",
               width = 12,
               solidHeader = TRUE,
               status = "primary",
@@ -214,9 +214,12 @@ app_ui <- function(request) {
           tabName = "version_diff",
           fluidRow(
             box(
+              title = "Versions to Compare",
               width = 12,
-              selectInput("version_old", "Version Old:", choices = c("")),
+              solidHeader = TRUE,
+              status = "primary",
               selectInput("version_new", "Version New:", choices = c("")),
+              selectInput("version_old", "Version Old:", choices = c("")),
             )
           ),
           fluidRow(
@@ -225,7 +228,8 @@ app_ui <- function(request) {
               width = 6,
               solidHeader = TRUE,
               status = "primary",
-              withSpinner(tableOutput("version_diff"))
+              footer = "1 == added;0 == not changed;-1 == removed",
+              withSpinner(DT::dataTableOutput("dep_version_diff"))
             ),
             box(
               title = "Namespace Diff",
@@ -350,18 +354,34 @@ app_ui <- function(request) {
             box(
               class = "important-text",
               title = "Number of Releases",
-              width = 6,
+              width = 3,
               solidHeader = TRUE,
               status = "primary",
               withSpinner(textOutput("number_releases"))
             ),
             box(
               class = "important-text",
-              title = "Life Duration Stats",
-              width = 6,
+              title = "Minimum Life Duration",
+              width = 3,
               solidHeader = TRUE,
               status = "primary",
-              withSpinner(textOutput("stat_releases"))
+              withSpinner(textOutput("min_releases"))
+            ),
+            box(
+              class = "important-text",
+              title = "Mean Life Duration",
+              width = 3,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("mean_releases"))
+            ),
+            box(
+              class = "important-text",
+              title = "Maximum Life Duration",
+              width = 3,
+              solidHeader = TRUE,
+              status = "primary",
+              withSpinner(textOutput("max_releases"))
             )
           ),
           fluidRow(
@@ -473,17 +493,45 @@ app_server <- function(input, output, session) {
     updateSelectInput(session, "version_new", choices = tags_pac, selected = tail(tags_pac, 1))
   })
 
-  output$version_diff <- renderTable({
+  output$dep_version_diff <- DT::renderDataTable({
     req(pac())
     req(input$version_old)
     req(input$version_new)
-    pacs::pac_compare_versions(pac(), old = input$version_old, new = input$version_new)
+    validate(
+      need(
+        isTRUE(utils::compareVersion(input$version_new, input$version_old) == 1),
+        "New version has to be higher."
+      )
+    )
+    DT::datatable(
+      pacs::pac_compare_versions(pac(), old = input$version_old, new = input$version_new),
+      options = list(
+        paging = TRUE,
+        pageLength = 100,
+        columnDefs = list(
+          list(
+            targets = 2:3,
+            render = JS(
+             "function(data, type, row, meta) {",
+             "return data === null ? 'NA' : data;",
+             "}"
+            )
+          )
+        )
+      )
+    )
   })
 
   output$namespace_diff <- renderPrint({
     req(pac())
     req(input$version_old)
     req(input$version_new)
+    validate(
+      need(
+        isTRUE(utils::compareVersion(input$version_new, input$version_old) == 1),
+        "New version has to be higher."
+      )
+    )
     pacs::pac_compare_namespace(pac(), old = input$version_old, new = input$version_new)
   })
 
@@ -537,7 +585,8 @@ app_server <- function(input, output, session) {
     req(pac())
     table <- pacs::pac_checkpage(pac())
     if (length(table) > 0) {
-      DT::datatable(table,
+      DT::datatable(
+        table,
         options = list(
           paging = TRUE,
           pageLength = 20
@@ -558,7 +607,8 @@ app_server <- function(input, output, session) {
     req(order_timemachine())
     table <- order_timemachine()
     if (length(table) > 0) {
-      DT::datatable(table,
+      DT::datatable(
+        table,
         options = list(
           paging = TRUE,
           pageLength = 100
@@ -587,13 +637,16 @@ app_server <- function(input, output, session) {
     nrow(get_timemachine())
   })
 
-  output$stat_releases <- renderText({
-    sprintf(
-      "Min: %s, Mean: %s, Max: %s",
-      min(get_timemachine()$LifeDuration),
-      round(mean(get_timemachine()$LifeDuration)),
-      max(get_timemachine()$LifeDuration)
-    )
+  output$min_releases <- renderText({
+    min(get_timemachine()$LifeDuration)
+  })
+
+  output$mean_releases <- renderText({
+    round(mean(get_timemachine()$LifeDuration))
+  })
+
+  output$max_releases <- renderText({
+    max(get_timemachine()$LifeDuration)
   })
 
   user_deps <- reactive({
