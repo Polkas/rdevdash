@@ -595,7 +595,7 @@ app_server <- function(input, output, session) {
           lapply(names(result), function(e) {
             tags$tr(
               tags$th(e),
-              tags$td(dic1[[e]])
+              tags$td(result[[e]])
             )
           })
         )
