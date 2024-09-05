@@ -31,7 +31,7 @@ li .form-control {
 
 @media (max-width: 768px) {
     .search-input {
-        width: 300px;
+        width: 200px;
         margin-right: 5px;
         margin-left: 5px;
         margin-top: 8px;
