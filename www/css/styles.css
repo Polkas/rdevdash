@@ -24,6 +24,11 @@ li .form-control {
   overflow: hidden;
 }
 
+#news_diff_box_body  {
+  overflow: scroll !important;
+  height: 300px;
+}
+
 @media (max-width: 768px) {
     .search-input {
         width: 300px;

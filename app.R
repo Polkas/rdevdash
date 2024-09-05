@@ -10,6 +10,7 @@ library(lubridate)
 library(cranlogs)
 library(dplyr)
 library(teal.reporter)
+library(httr2)
 
 options(repos = c(CRAN = "http://cran.rstudio.com/"))
 
@@ -222,6 +223,17 @@ app_ui <- function(request) {
               style = "overflow:visible",
               selectInput("version_new", "Version New:", choices = c("")),
               selectInput("version_old", "Version Old:", choices = c("")),
+            )
+          ),
+          fluidRow(
+            box(
+              id = "news_diff_box_body",
+              title = "NEWS",
+              width = 12,
+              solidHeader = TRUE,
+              status = "primary",
+              height = 350,
+              withSpinner(verbatimTextOutput("news_diff"))
             )
           ),
           fluidRow(
@@ -493,6 +505,43 @@ app_server <- function(input, output, session) {
     tags_pac <- get_timemachine()[["Version"]]
     updateSelectInput(session, "version_old", choices = tags_pac, selected = head(tail(tags_pac, 2), 1))
     updateSelectInput(session, "version_new", choices = tags_pac, selected = tail(tags_pac, 1))
+  })
+
+  pac_news <- reactive({
+    req(pac())
+
+    for (file in c("NEWS.md", "NEWS", "NEWS.Rmd")) {
+      d_url <- sprintf("https://raw.githubusercontent.com/cran/%s/%s/%s", pac(), pacs::pac_last(pac()), file)
+      response <- request(d_url) %>% req_perform()
+
+      if (resp_status(response) == 200) {
+        return(resp_body_string(response))
+      }
+    }
+    validate(need(TRUE, "No NEWS file."))
+  })
+
+  output$news_diff <- renderText({
+    req(isolate(pac_news()))
+    req(input$version_old)
+    req(input$version_new)
+    validate(
+      need(
+        isTRUE(utils::compareVersion(input$version_new, input$version_old) == 1),
+        "New version has to be higher."
+      )
+    )
+
+    version_pattern <- function(version) {
+      paste0("#.*", version)
+    }
+    old_version_pos <- str_locate(isolate(pac_news()), version_pattern(input$version_old))[1]
+    new_version_pos <- str_locate(isolate(pac_news()), version_pattern(input$version_new))[1]
+
+    validate(need(!(is.na(old_version_pos) || is.na(new_version_pos)), "Failed to get the NEWS diff."))
+
+    news_excerpt <- str_sub(pac_news(), new_version_pos, old_version_pos - 1)
+    news_excerpt
   })
 
   output$dep_version_diff <- DT::renderDataTable({
