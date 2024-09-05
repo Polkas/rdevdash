@@ -20,6 +20,10 @@ li .form-control {
     font-weight: bold;
 }
 
+.box-body {
+  overflow: auto;
+}
+
 @media (max-width: 768px) {
     .search-input {
         width: 300px;

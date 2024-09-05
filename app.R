@@ -9,6 +9,7 @@ library(DT)
 library(lubridate)
 library(cranlogs)
 library(dplyr)
+library(teal.reporter)
 
 options(repos = c(CRAN = "http://cran.rstudio.com/"))
 
