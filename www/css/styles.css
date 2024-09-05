@@ -21,7 +21,7 @@ li .form-control {
 }
 
 .box-body {
-  overflow: auto;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
