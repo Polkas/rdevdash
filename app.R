@@ -219,6 +219,7 @@ app_ui <- function(request) {
               width = 12,
               solidHeader = TRUE,
               status = "primary",
+              style = "overflow:visible",
               selectInput("version_new", "Version New:", choices = c("")),
               selectInput("version_old", "Version Old:", choices = c("")),
             )
