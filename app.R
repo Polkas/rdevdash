@@ -278,6 +278,7 @@ app_ui <- function(request) {
           ),
           fluidRow(
             box(
+              style = "overflow: scroll !important;",
               title = "CRAN Check Results",
               width = 12,
               solidHeader = TRUE,
@@ -400,6 +401,7 @@ app_ui <- function(request) {
           ),
           fluidRow(
             box(
+              style = "overflow: scroll !important;",
               title = "CRAN Releases",
               width = 12,
               solidHeader = TRUE,
@@ -646,7 +648,7 @@ app_server <- function(input, output, session) {
     } else {
       "No CRAN check results found."
     }
-  }, )
+  })
 
   order_timemachine <- reactive({
     get_timemachine() %>%
