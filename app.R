@@ -239,7 +239,7 @@ app_ui <- function(request) {
           fluidRow(
             box(
               style = "overflow: scroll !important;",
-              title = "DESCRIPTION (Depends, Imports, LinkingTo) Deps Diff",
+              title = "DESCRIPTION Deps Diff",
               width = 6,
               solidHeader = TRUE,
               status = "primary",
