@@ -238,6 +238,7 @@ app_ui <- function(request) {
           ),
           fluidRow(
             box(
+              style = "overflow: scroll !important;",
               title = "DESCRIPTION Deps Diff",
               width = 6,
               solidHeader = TRUE,
@@ -306,7 +307,7 @@ app_ui <- function(request) {
               width = 6,
               solidHeader = TRUE,
               status = "primary",
-              footer = "Depends, Imports, LinkingTo",
+              footer = "Depends, Imports, LinkingTo - Recursive",
               withSpinner(textOutput("number_user_dependencies"))
             ),
             box(
@@ -315,7 +316,7 @@ app_ui <- function(request) {
               width = 6,
               solidHeader = TRUE,
               status = "primary",
-              footer = "Depends, Imports, LinkingTo, Suggests",
+              footer = "Depends, Imports, LinkingTo, Suggests - Recursive",
               withSpinner(textOutput("number_developer_dependencies"))
             )
           ),
@@ -325,14 +326,36 @@ app_ui <- function(request) {
               width = 6,
               solidHeader = TRUE,
               status = "primary",
-              withSpinner(DT::dataTableOutput("user_dependencies"))
+              withSpinner(DT::dataTableOutput("user_dependencies")),
+              footer = "Depends, Imports, LinkingTo - Recursive"
             ),
+            box(
+              style = "overflow: scroll !important;",
+              title = "USER Heavy Dependencies",
+              width = 6,
+              solidHeader = TRUE,
+              status = "primary",
+              footer = "Depends, Imports, LinkingTo",
+              withSpinner(DT::dataTableOutput("user_heavy_dependencies"))
+            )
+          ),
+          fluidRow(
             box(
               title = "Package DEVELOPER Dependencies",
               width = 6,
               solidHeader = TRUE,
               status = "primary",
-              withSpinner(DT::dataTableOutput("developer_dependencies"))
+              withSpinner(DT::dataTableOutput("developer_dependencies")),
+              footer = "Depends, Imports, LinkingTo, Suggests - Recursive"
+            ),
+            box(
+              style = "overflow: scroll !important;",
+              title = "DEVELOPER Heavy Dependencies",
+              width = 6,
+              solidHeader = TRUE,
+              status = "primary",
+              footer = "Depends, Imports, LinkingTo, Suggests",
+              withSpinner(DT::dataTableOutput("developer_heavy_dependencies"))
             )
           )
         ),
@@ -483,11 +506,6 @@ app_server <- function(input, output, session) {
     ignoreNULL = TRUE
   )
 
-  output$pac_name <- renderText({
-    req(pac())
-    pac()
-  })
-
   last_version <- reactive({
     req(pac())
     pacs::pac_last(pac())
@@ -508,6 +526,8 @@ app_server <- function(input, output, session) {
     updateSelectInput(session, "version_old", choices = tags_pac, selected = head(tail(tags_pac, 2), 1))
     updateSelectInput(session, "version_new", choices = tags_pac, selected = tail(tags_pac, 1))
   })
+
+  ### Version Diff Tab
 
   pac_news <- reactive({
     req(pac())
@@ -588,6 +608,8 @@ app_server <- function(input, output, session) {
     pacs::pac_compare_namespace(isolate(pac()), old = input$version_old, new = input$version_new)
   })
 
+  ### Downloads Tab
+
   download_pacs <- reactive({
     req(pac())
     try(
@@ -634,6 +656,21 @@ app_server <- function(input, output, session) {
     }
   })
 
+  ### Checkpage Tab
+
+  output$check_page <- renderUI({
+    url <- sprintf("https://cran.r-project.org/web/checks/check_results_%s.html", pac())
+    tags$a(href = url, url)
+  })
+
+  output$red_status <- renderUI({
+    status <- pacs::pac_checkred(pac())
+    tags$span(
+      style = if (isTRUE(status)) "color:red;" else "color:green;",
+      status
+    )
+  })
+
   output$cran_check_results <- DT::renderDataTable({
     req(pac())
     table <- pacs::pac_checkpage(pac())
@@ -649,6 +686,8 @@ app_server <- function(input, output, session) {
       "No CRAN check results found."
     }
   })
+
+  ### Release List Tab
 
   order_timemachine <- reactive({
     get_timemachine() %>%
@@ -702,6 +741,8 @@ app_server <- function(input, output, session) {
     max(get_timemachine()$LifeDuration)
   })
 
+  ### Deps Tab
+
   user_deps <- reactive({
     req(pac())
     pacs::pac_deps_user(pac(), local = FALSE)
@@ -740,28 +781,35 @@ app_server <- function(input, output, session) {
     )
   })
 
-  output$name <- renderText({
-    pac()
+  output$developer_heavy_dependencies <-  DT::renderDataTable({
+    tab <-  pacs::pac_deps_heavy(
+      pac(),
+      fields = c("Depends", "Imports", "LinkingTo", "Suggests")
+    ) %>% arrange(desc(NrUniqueDeps))
+
+    DT::datatable(
+      tab,
+      options = list(
+        paging = TRUE,
+        pageLength = 100
+      )
+    )
   })
 
-  output$title <- renderText({
-    get_description()[["Title"]]
-  })
+  output$user_heavy_dependencies <-  DT::renderDataTable({
+    tab <- pacs::pac_deps_heavy(
+      pac(),
+      fields = c("Depends", "Imports", "LinkingTo")
+    ) %>%
+      arrange(desc(NrUniqueDeps))
 
-  output$description <- renderText({
-    get_description()[["Description"]]
-  })
-
-  output$last_version <- renderText({
-    last_version()
-  })
-
-  output$license <- renderText({
-    get_description()[["License"]]
-  })
-
-  output$maintainer <- renderUI({
-    tags$a(href = paste0("mailto:", get_description()[["Maintainer"]]), get_description()[["Maintainer"]])
+    DT::datatable(
+      tab,
+      options = list(
+        paging = TRUE,
+        pageLength = 100
+      )
+    )
   })
 
   output$description_deps <- renderUI({
@@ -791,6 +839,32 @@ app_server <- function(input, output, session) {
         )
       )
     )
+  })
+
+  ### Info Tab
+
+  output$name <- renderText({
+    pac()
+  })
+
+  output$title <- renderText({
+    get_description()[["Title"]]
+  })
+
+  output$description <- renderText({
+    get_description()[["Description"]]
+  })
+
+  output$last_version <- renderText({
+    last_version()
+  })
+
+  output$license <- renderText({
+    get_description()[["License"]]
+  })
+
+  output$maintainer <- renderUI({
+    tags$a(href = paste0("mailto:", get_description()[["Maintainer"]]), get_description()[["Maintainer"]])
   })
 
   output$bugreports <- renderUI({
@@ -826,19 +900,6 @@ app_server <- function(input, output, session) {
 
   output$compilation <- renderText({
     get_description()[["NeedsCompilation"]]
-  })
-
-  output$check_page <- renderUI({
-    url <- sprintf("https://cran.r-project.org/web/checks/check_results_%s.html", pac())
-    tags$a(href = url, url)
-  })
-
-  output$red_status <- renderUI({
-    status <- pacs::pac_checkred(pac())
-    tags$span(
-      style = if (isTRUE(status)) "color:red;" else "color:green;",
-      status
-    )
   })
 
   output$requirements <- renderText({
