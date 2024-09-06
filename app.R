@@ -239,11 +239,18 @@ app_ui <- function(request) {
           fluidRow(
             box(
               style = "overflow: scroll !important;",
-              title = "DESCRIPTION Deps Diff",
+              title = "DESCRIPTION (Depends, Imports, LinkingTo) Deps Diff",
               width = 6,
               solidHeader = TRUE,
               status = "primary",
               footer = "1 == added;0 == not changed;-1 == removed",
+              selectInput(
+                "diff_deps_select",
+                "Types of Dependencies",
+                choices = c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"),
+                selected = c("Depends", "Imports", "LinkingTo"),
+                multiple = TRUE
+              ),
               withSpinner(DT::dataTableOutput("dep_version_diff"))
             ),
             box(
@@ -570,6 +577,7 @@ app_server <- function(input, output, session) {
     req(isolate(pac()))
     req(input$version_old)
     req(input$version_new)
+    req(input$diff_deps_select)
     validate(
       need(
         isTRUE(utils::compareVersion(input$version_new, input$version_old) == 1),
@@ -577,7 +585,7 @@ app_server <- function(input, output, session) {
       )
     )
     DT::datatable(
-      pacs::pac_compare_versions(isolate(pac()), old = input$version_old, new = input$version_new),
+      pacs::pac_compare_versions(isolate(pac()), old = input$version_old, new = input$version_new, fields = input$diff_deps_select),
       options = list(
         paging = TRUE,
         pageLength = 100,
