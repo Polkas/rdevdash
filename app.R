@@ -913,7 +913,7 @@ app_server <- function(input, output, session) {
   output$requirements <- renderText({
     reqs <- get_description()[["SystemRequirements"]]
     rdep <- stringr::str_extract(get_description()[["Depends"]], "R \\(.*\\)")
-    if (is.na(rdep)) rdep <- NULL
+    if (length(rdep) == 0 || is.na(rdep)) rdep <- NULL
     paste(rdep, reqs)
   })
 }
