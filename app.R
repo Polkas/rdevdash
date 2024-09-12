@@ -485,6 +485,7 @@ app_ui <- function(request) {
                 code("pacs"),
                 " package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN."
               ),
+              a(href = "https://github.com/Polkas/rdevdash/issues", h3("Report Issue")),
               h3("What is ", code("pacs"), "?"),
               img(src = "https://raw.githubusercontent.com/Polkas/pacs/main/man/figures/pacs_logo.svg", width = "300px", height = "300px"),
               p(
