@@ -447,6 +447,7 @@ app_ui <- function(request) {
             div(
               class = "col-sm-8",
               style = "margin: 0px auto; float: none; padding:20px;",
+              a(href = "https://github.com/Polkas/rdevdash/issues", h1("Report Issue")),
               h2("About This Dashboard"),
               p(
                 "Welcome to the ",
@@ -485,7 +486,6 @@ app_ui <- function(request) {
                 code("pacs"),
                 " package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN."
               ),
-              a(href = "https://github.com/Polkas/rdevdash/issues", h3("Report Issue")),
               h3("What is ", code("pacs"), "?"),
               img(src = "https://raw.githubusercontent.com/Polkas/pacs/main/man/figures/pacs_logo.svg", width = "300px", height = "300px"),
               p(
