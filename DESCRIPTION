@@ -1,0 +1,29 @@
+Package: rdevdash
+Title: CRAN Package Developer Dashboard
+Version: 0.1.0.9000
+Authors@R: 
+    person("Maciej", "Nasinski", , "nasinski.maciej@example.com", role = c("aut", "cre"))
+Description: 
+  CRAN Package Developer Dashboard, a comprehensive tool designed to streamline the process of tracking and managing CRAN packages.
+  This dashboard is primarily powered by the `pacs` package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN.
+License: Apache License (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.2
+Imports: 
+    cranlogs,
+    dplyr,
+    DT,
+    ggplot2,
+    httr2,
+    lubridate,
+    magrittr,
+    pacs,
+    scales,
+    shiny,
+    shinycssloaders,
+    shinydashboard,
+    shinyWidgets,
+    stringr
+Suggests: 
+    devtools
