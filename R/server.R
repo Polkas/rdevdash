@@ -22,11 +22,6 @@ globalVariables(c('.' , 'Archived', 'JS', 'LifeDuration', 'NrUniqueDeps', 'Packa
 #'   \item{\strong{Dependencies Tab}}{Displays user and developer dependencies of the package.}
 #'   \item{\strong{Info Tab}}{Provides package information such as title, description, version, license, etc.}
 #' }
-#' @examples
-#' # Inside your Shiny app
-#' shinyServer(function(input, output, session) {
-#'   app_server(input, output, session)
-#' })
 #' @export
 app_server <- function(input, output, session) {
   pac <- eventReactive(input$pac,

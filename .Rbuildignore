@@ -6,3 +6,5 @@
 ^project_images$
 ^rsconnect$
 ^www
+^codecov\.yml$
+^\.github$

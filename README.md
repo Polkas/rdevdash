@@ -1,5 +1,7 @@
 # rdevdash
 
+[![R-CMD-check](https://github.com/Polkas/rdevdash/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Polkas/rdevdash/actions/workflows/R-CMD-check.yaml)
+
 Welcome to the R Package Developer Dashboard, a comprehensive tool designed to streamline the process of tracking and managing CRAN packages.
 
 Key Dashboard Features:

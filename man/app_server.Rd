@@ -34,9 +34,3 @@ The server function performs several key operations:
 \item{\strong{Info Tab}}{Provides package information such as title, description, version, license, etc.}
 }
 }
-\examples{
-# Inside your Shiny app
-shinyServer(function(input, output, session) {
-  app_server(input, output, session)
-})
-}

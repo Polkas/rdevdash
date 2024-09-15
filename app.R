@@ -16,4 +16,4 @@ options(repos = c(CRAN = "http://cran.rstudio.com/"))
 
 devtools::load_all()
 
-shiny::shinyApp(app_ui, app_server)
+run_rdevdash_app()
