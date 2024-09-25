@@ -2,7 +2,6 @@
 
 export(app_server)
 export(app_ui)
-export(run_rdevdash_app)
 import(magrittr)
 import(shiny)
 import(shinydashboard)
