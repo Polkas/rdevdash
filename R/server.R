@@ -28,7 +28,7 @@ app_server <- function(input, output, session) {
                        {
                          validate(
                            need(input$pac != "", "Please select a package name."),
-                           need(input$pac %in% utils::available.packages(), sprintf("'%s' is not a valid CRAN package name", input$pac))
+                           need(input$pac %in% rownames(utils::available.packages()), sprintf("'%s' is not a valid CRAN package name", input$pac))
                          )
                          input$pac
                        },
