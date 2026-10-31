@@ -99,6 +99,48 @@ test_that("cached evaluates once per key and does not cache errors", {
   expect_equal(cached(err_key, "ok"), "ok")
 })
 
+test_that("release history falls back after a failed CRAN request", {
+  history <- data.frame(
+    Package = "test.release.fallback",
+    Version = c("1.0", "1.1"),
+    Released = as.Date(c("2024-01-01", "2024-02-01")),
+    Archived = as.Date(c("2024-02-01", NA)),
+    LifeDuration = as.difftime(c(31, 60), units = "days")
+  )
+  sources <- character(0)
+  local_mocked_bindings(
+    pac_timemachine = function(pac, source) {
+      sources <<- c(sources, source)
+      if (source == "cran") stop("connection failed")
+      history
+    },
+    .package = "pacs"
+  )
+  app_cache()$reset()
+  expect_warning(result <- fetch_release_history(history$Package[1]), "Using crandb instead")
+  expect_equal(result, history)
+  expect_equal(sources, c("cran", "crandb"))
+  expect_equal(fetch_release_history(history$Package[1]), history)
+  expect_length(sources, 2)
+})
+
+test_that("invalid release histories are rejected and failures are not cached", {
+  expect_false(valid_release_history(NA))
+  expect_false(valid_release_history(data.frame(Version = "1.0")))
+  calls <- 0L
+  local_mocked_bindings(
+    pac_timemachine = function(pac, source) {
+      calls <<- calls + 1L
+      NA
+    },
+    .package = "pacs"
+  )
+  app_cache()$reset()
+  expect_error(fetch_release_history("test.release.invalid"), "missing or invalid release history")
+  expect_error(fetch_release_history("test.release.invalid"), "missing or invalid release history")
+  expect_equal(calls, 4L)
+})
+
 test_that("aggregate_downloads drops incomplete edge buckets", {
   dates <- seq(as.Date("2024-01-03"), as.Date("2024-01-24"), by = "day") # Wed .. Wed
   data <- data.frame(date = dates, count = 1, package = "a")

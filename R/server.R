@@ -85,7 +85,7 @@ app_server <- function(input, output, session) {
   get_timemachine <- reactive({
     p <- pac()
     safely_validate(
-      cached(list("timemachine", p), pacs::pac_timemachine(p)),
+      fetch_release_history(p),
       "Could not fetch the release history from CRAN."
     )
   })
@@ -105,6 +105,8 @@ app_server <- function(input, output, session) {
   }
 
   observeEvent(pac(), {
+    updateSelectInput(session, "version_old", choices = character(0))
+    updateSelectInput(session, "version_new", choices = character(0))
     tags_pac <- rev(get_timemachine()[["Version"]])
     updateSelectInput(session, "version_old", choices = tags_pac, selected = tags_pac[min(2, length(tags_pac))])
     updateSelectInput(session, "version_new", choices = tags_pac, selected = tags_pac[1])

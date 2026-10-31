@@ -38,6 +38,7 @@ safely_validate <- function(expr, message) {
     expr,
     error = function(e) {
       if (inherits(e, "shiny.silent.error")) stop(e)
+      warning(message, " Details: ", conditionMessage(e), call. = FALSE)
       validate(need(FALSE, message))
     }
   )
@@ -54,6 +55,54 @@ cran_repo <- function() {
 cran_packages <- function() {
   cached(list("available_packages", cran_repo()), {
     sort(rownames(utils::available.packages(repos = cran_repo())))
+  })
+}
+
+valid_release_history <- function(data) {
+  fields <- c("Package", "Version", "Released", "Archived", "LifeDuration")
+  is.data.frame(data) &&
+    nrow(data) > 0 &&
+    all(fields %in% names(data)) &&
+    is.character(data$Version) &&
+    all(!is.na(data$Version) & nzchar(data$Version)) &&
+    inherits(data$Released, "Date") &&
+    all(!is.na(data$Released)) &&
+    inherits(data$Archived, "Date") &&
+    all(is.finite(as.numeric(data$LifeDuration)))
+}
+
+#' Retrieve release history, using CRANDB when CRAN HTML cannot be read.
+#' @noRd
+fetch_release_history <- function(pac) {
+  cached(list("release_history", pac), {
+    failures <- character(0)
+    result <- NULL
+    for (source in c("cran", "crandb")) {
+      data <- tryCatch(
+        pacs::pac_timemachine(pac, source = source),
+        error = function(e) {
+          failures <<- c(failures, sprintf("%s: %s", source, conditionMessage(e)))
+          NULL
+        }
+      )
+      if (valid_release_history(data)) {
+        if (length(failures)) {
+          warning(
+            sprintf("Release history for %s: %s. Using %s instead.", pac, paste(failures, collapse = "; "), source),
+            call. = FALSE
+          )
+        }
+        result <- data[order(data$Released), , drop = FALSE]
+        break
+      }
+      if (!is.null(data)) {
+        failures <- c(failures, sprintf("%s: missing or invalid release history", source))
+      }
+    }
+    if (is.null(result)) {
+      stop(sprintf("Release history for %s is unavailable: %s", pac, paste(failures, collapse = "; ")), call. = FALSE)
+    }
+    result
   })
 }
 
@@ -97,6 +146,7 @@ news_excerpt <- function(news, new, old) {
 fetch_news <- function(pac, version) {
   cached(list("news", pac, version), {
     files <- c("NEWS.md", "NEWS", "inst/NEWS.md", "inst/NEWS", "NEWS.Rmd")
+    result <- NULL
     for (file in files) {
       url <- sprintf("https://raw.githubusercontent.com/cran/%s/%s/%s", pac, version, file)
       resp <- httr2::request(url) %>%
@@ -107,10 +157,11 @@ fetch_news <- function(pac, version) {
         httr2::req_timeout(20) %>%
         httr2::req_perform()
       if (!is.null(resp) && httr2::resp_status(resp) == 200) {
-        return(list(text = httr2::resp_body_string(resp), file = file))
+        result <- list(text = httr2::resp_body_string(resp), file = file)
+        break
       }
     }
-    NULL
+    result
   })
 }
 

@@ -18,6 +18,7 @@ Quality of life:
 - **Shareable links** - the selected package and page are kept in the URL, e.g. `?pkg=dplyr&tab=downloads`.
 - **Caching** of all network calls (shared across sessions, 6 hours), so revisiting a package is instant.
 - Friendly messages instead of errors when something is not available (e.g. a package without a NEWS file).
+- Release history uses CRANDB as a fallback when CRAN's HTML pages cannot be read; failed requests are logged for deployment troubleshooting.
 
 ## Run locally
 
@@ -26,6 +27,18 @@ Quality of life:
 pak::local_install_deps()
 shiny::runApp()
 ```
+
+## Deploy to Connect Cloud
+
+Regenerate the deployment manifest after changing runtime dependencies or app files:
+
+```r
+rsconnect::writeManifest(appDir = ".")
+```
+
+Commit the app changes and the regenerated `manifest.json` to the branch used by
+Connect Cloud, then republish. The runtime needs `pkgload` to load this repository
+as an R package; it is included in `Imports`.
 
 ## Deploy to Posit Connect Cloud
 
