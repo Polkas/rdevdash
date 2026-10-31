@@ -73,23 +73,29 @@ observers, and render functions to interact with the UI components.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>The server function performs several key operations:</p><dl><dt><strong>Package Validation</strong></dt>
-<dd><p>Validates the selected package name and checks if it is a valid CRAN package.</p></dd>
+    <p>The server function performs several key operations:</p><dl><dt><strong>Package Search</strong></dt>
+<dd><p>Server-side autocomplete over all CRAN packages and validation of the selection.</p></dd>
+
+<dt><strong>Shareable URLs</strong></dt>
+<dd><p>The selected package and page are kept in the URL (<code>?pkg=shiny&amp;tab=downloads</code>).</p></dd>
+
+<dt><strong>Caching</strong></dt>
+<dd><p>Network calls (CRAN, GitHub CRAN mirror, cranlogs) are cached across sessions.</p></dd>
 
 <dt><strong>Version Handling</strong></dt>
 <dd><p>Retrieves package versions and updates version selection inputs in the UI.</p></dd>
 
-<dt><strong>NEWS Diff Tab</strong></dt>
-<dd><p>Fetches the NEWS file for the package and displays the differences between versions.</p></dd>
+<dt><strong>Versions Tab</strong></dt>
+<dd><p>Displays NEWS, DESCRIPTION dependencies and NAMESPACE differences between versions.</p></dd>
 
 <dt><strong>Downloads Tab</strong></dt>
-<dd><p>Plots the download statistics of the package over time.</p></dd>
+<dd><p>Interactive download statistics of the package over time, with comparisons.</p></dd>
 
 <dt><strong>Checkpage Tab</strong></dt>
 <dd><p>Displays CRAN check results and package status.</p></dd>
 
 <dt><strong>Release List Tab</strong></dt>
-<dd><p>Shows the list of package releases with details.</p></dd>
+<dd><p>Shows the list and timeline of package releases.</p></dd>
 
 <dt><strong>Dependencies Tab</strong></dt>
 <dd><p>Displays user and developer dependencies of the package.</p></dd>
@@ -112,7 +118,7 @@ observers, and render functions to interact with the UI components.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

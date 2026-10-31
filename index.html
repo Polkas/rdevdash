@@ -60,10 +60,19 @@
 </h1></div>
 <p><a href="https://github.com/Polkas/rdevdash/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Polkas/rdevdash/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></p>
 <p>Welcome to the R Package Developer Dashboard, a comprehensive tool designed to streamline the process of tracking and managing CRAN packages.</p>
-<p>Key Dashboard Features: - Package Information: Quickly retrieve and display detailed information about any CRAN package, including the latest version, license, and maintainer details. - Package Downloads: Visualize and compare package download statistics over time. - Version Differences: Compare different versions of a package to track changes and updates. - CRAN Check Results: View CRAN check results. - Package Dependencies: Analyze package dependencies from user and developer perspective. - CRAN Releases: Stay updated with all CRAN releases for a package.</p>
+<p>Key Dashboard Features: - <strong>Package Overview</strong>: The latest version, license, maintainer, links, CRAN check health and last month’s downloads (with a sparkline) at a glance. - <strong>Package Downloads</strong>: Interactive (zoom/hover) download trends aggregated by day, week, month or year, comparisons with other packages, optional trend lines, log scale and CSV export. - <strong>Version Differences</strong>: NEWS, DESCRIPTION dependencies and NAMESPACE differences between any two releases. - <strong>CRAN Check Results</strong>: Check results for every CRAN flavor with a status summary. - <strong>Package Dependencies</strong>: Recursive user and developer dependencies, plus the heaviest ones. - <strong>CRAN Releases</strong>: Full release history and an interactive release timeline.</p>
+<p>Quality of life: - Modern <a href="https://rstudio.github.io/bslib/" class="external-link"><code>bslib</code></a> (Bootstrap 5) interface with a <strong>light/dark mode</strong> toggle. - <strong>Autocomplete search</strong> over all CRAN packages. - <strong>Shareable links</strong> - the selected package and page are kept in the URL, e.g. <code>?pkg=dplyr&amp;tab=downloads</code>. - <strong>Caching</strong> of all network calls (shared across sessions, 6 hours), so revisiting a package is instant. - Friendly messages instead of errors when something is not available (e.g. a package without a NEWS file).</p>
+<div class="section level2">
+<h2 id="run-locally">Run locally<a class="anchor" aria-label="anchor" href="#run-locally"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/local_install_deps.html" class="external-link">local_install_deps</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>This dashboard is primarily powered by the <code>pacs</code> package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN.</p>
 <p>What is <code>pacs</code> ?</p>
 <p><code>pacs</code> is an R package that provides a suite of functions to interact with CRAN packages, analyze dependencies, compare package versions, and much more. It serves as the backbone of this dashboard. For more information, visit <a href="https://CRAN.R-project.org/package=pacs" class="external-link">the pacs CRAN page</a>.</p>
+</div>
 </div>
   </div>
 
@@ -87,7 +96,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Maciej Nasinski <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Maciej Nasinski <br><small class="roles"> Author, maintainer </small>   </li>
 </ul>
 </div>
 
@@ -104,7 +113,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer>
