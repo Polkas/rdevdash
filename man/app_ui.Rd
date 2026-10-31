@@ -7,10 +7,11 @@
 app_ui()
 }
 \value{
-A Shiny UI definition created using \code{shinydashboard::dashboardPage}.
+A Shiny UI definition created using \code{bslib::page_navbar}.
 }
 \description{
-This function defines the user interface of the Shiny dashboard application. It sets up the dashboard layout,
-including the header, sidebar, and body with multiple tabs for different functionalities such as package information,
-downloads, version differences, CRAN check results, dependencies, releases, and about.
+This function defines the user interface of the Shiny dashboard application. It is built with
+\code{bslib} (Bootstrap 5) and consists of a global sidebar with a CRAN package search and a package
+summary, plus several pages: overview, downloads, version differences, CRAN check results,
+dependencies, releases and about. A light/dark mode switch is available in the navigation bar.
 }

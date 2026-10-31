@@ -1,20 +1,5 @@
-library(shiny)
-library(shinydashboard)
-library(shinycssloaders)
-library(ggplot2)
-library(scales)
-library(pacs)
-library(stringr)
-library(DT)
-library(lubridate)
-library(cranlogs)
-library(dplyr)
-library(httr2)
-library(devtools)
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-options(repos = c(CRAN = "http://cran.rstudio.com/"))
+pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE)
 
-devtools::load_all()
-
-shiny::shinyApp(app_ui, app_server)
-
+shiny::shinyApp(rdevdash::app_ui, rdevdash::app_server)

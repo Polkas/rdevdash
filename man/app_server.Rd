@@ -24,12 +24,14 @@ observers, and render functions to interact with the UI components.
 \details{
 The server function performs several key operations:
 \describe{
-\item{\strong{Package Validation}}{Validates the selected package name and checks if it is a valid CRAN package.}
+\item{\strong{Package Search}}{Server-side autocomplete over all CRAN packages and validation of the selection.}
+\item{\strong{Shareable URLs}}{The selected package and page are kept in the URL (\code{?pkg=shiny&tab=downloads}).}
+\item{\strong{Caching}}{Network calls (CRAN, GitHub CRAN mirror, cranlogs) are cached across sessions.}
 \item{\strong{Version Handling}}{Retrieves package versions and updates version selection inputs in the UI.}
-\item{\strong{NEWS Diff Tab}}{Fetches the NEWS file for the package and displays the differences between versions.}
-\item{\strong{Downloads Tab}}{Plots the download statistics of the package over time.}
+\item{\strong{Versions Tab}}{Displays NEWS, DESCRIPTION dependencies and NAMESPACE differences between versions.}
+\item{\strong{Downloads Tab}}{Interactive download statistics of the package over time, with comparisons.}
 \item{\strong{Checkpage Tab}}{Displays CRAN check results and package status.}
-\item{\strong{Release List Tab}}{Shows the list of package releases with details.}
+\item{\strong{Release List Tab}}{Shows the list and timeline of package releases.}
 \item{\strong{Dependencies Tab}}{Displays user and developer dependencies of the package.}
 \item{\strong{Info Tab}}{Provides package information such as title, description, version, license, etc.}
 }

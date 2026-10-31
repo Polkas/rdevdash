@@ -5,12 +5,27 @@
 Welcome to the R Package Developer Dashboard, a comprehensive tool designed to streamline the process of tracking and managing CRAN packages.
 
 Key Dashboard Features:
-- Package Information: Quickly retrieve and display detailed information about any CRAN package, including the latest version, license, and maintainer details.
-- Package Downloads: Visualize and compare package download statistics over time.
-- Version Differences: Compare different versions of a package to track changes and updates.
-- CRAN Check Results: View CRAN check results.
-- Package Dependencies: Analyze package dependencies from user and developer perspective.
-- CRAN Releases: Stay updated with all CRAN releases for a package.
+- **Package Overview**: The latest version, license, maintainer, links, CRAN check health and last month's downloads (with a sparkline) at a glance.
+- **Package Downloads**: Interactive (zoom/hover) download trends aggregated by day, week, month or year, comparisons with other packages, optional trend lines, log scale and CSV export.
+- **Version Differences**: NEWS, DESCRIPTION dependencies and NAMESPACE differences between any two releases.
+- **CRAN Check Results**: Check results for every CRAN flavor with a status summary.
+- **Package Dependencies**: Recursive user and developer dependencies, plus the heaviest ones.
+- **CRAN Releases**: Full release history and an interactive release timeline.
+
+Quality of life:
+- Modern [`bslib`](https://rstudio.github.io/bslib/) (Bootstrap 5) interface with a **light/dark mode** toggle.
+- **Autocomplete search** over all CRAN packages.
+- **Shareable links** - the selected package and page are kept in the URL, e.g. `?pkg=dplyr&tab=downloads`.
+- **Caching** of all network calls (shared across sessions, 6 hours), so revisiting a package is instant.
+- Friendly messages instead of errors when something is not available (e.g. a package without a NEWS file).
+
+## Run locally
+
+```r
+# install.packages("pak")
+pak::local_install_deps()
+shiny::runApp()
+```
 
 This dashboard is primarily powered by the `pacs` package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN.
 

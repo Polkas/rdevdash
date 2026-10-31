@@ -1,498 +1,444 @@
+#' Theme of the application
+#' @noRd
+app_theme <- function() {
+  bslib::bs_theme(
+    version = 5,
+    primary = "#2165b6",
+    secondary = "#6c757d",
+    success = "#198754",
+    info = "#0dcaf0",
+    "border-radius" = "0.6rem",
+    "card-border-radius" = "0.9rem",
+    base_font = bslib::font_collection(
+      bslib::font_google("Inter", local = FALSE),
+      "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"
+    ),
+    code_font = bslib::font_collection(
+      bslib::font_google("JetBrains Mono", local = FALSE),
+      "SFMono-Regular", "Menlo", "monospace"
+    ),
+    heading_font = bslib::font_collection(
+      bslib::font_google("Inter", local = FALSE),
+      "system-ui", "sans-serif"
+    )
+  )
+}
+
+vbox <- function(title, value, icon, ..., theme = "primary") {
+  bslib::value_box(
+    title = title,
+    value = value,
+    showcase = bsicons::bs_icon(icon),
+    theme = theme,
+    ...
+  )
+}
+
+info_row <- function(label, output) {
+  tags$tr(tags$th(scope = "row", label), tags$td(output))
+}
+
 #' User Interface for the Shiny Application
 #'
-#' This function defines the user interface of the Shiny dashboard application. It sets up the dashboard layout,
-#' including the header, sidebar, and body with multiple tabs for different functionalities such as package information,
-#' downloads, version differences, CRAN check results, dependencies, releases, and about.
+#' This function defines the user interface of the Shiny dashboard application. It is built with
+#' \code{bslib} (Bootstrap 5) and consists of a global sidebar with a CRAN package search and a package
+#' summary, plus several pages: overview, downloads, version differences, CRAN check results,
+#' dependencies, releases and about. A light/dark mode switch is available in the navigation bar.
 #'
-#' @return A Shiny UI definition created using \code{shinydashboard::dashboardPage}.
+#' @return A Shiny UI definition created using \code{bslib::page_navbar}.
 #' @import shiny
-#' @import shinydashboard
 #' @import magrittr
 #' @export
 app_ui <- function() {
-  av_cran <- "https://cran.r-project.org/web/packages/available_packages_by_name.html"
+  page_title <- "R Dev Dashboard"
 
-  dashboardPage(
-    skin = "blue",
-    title = "R Dev Dashboard",
-    dashboardHeader(
-      title = tags$span(
-        tags$img(
-          src = "https://cran.r-project.org/Rlogo.svg",
-          width = "40px",
-          height = "40px",
-          style = "margin-bottom:10px;margin-right:10px;"
-        ),
-        "R Dev Dashboard"
+  bslib::page_navbar(
+    id = "nav",
+    title = tags$span(
+      class = "app-brand",
+      tags$img(src = "https://cran.r-project.org/Rlogo.svg", alt = "R logo", height = "30"),
+      tags$span(page_title)
+    ),
+    window_title = page_title,
+    theme = app_theme(),
+    lang = "en",
+    fillable = FALSE,
+    header = tagList(
+      tags$head(
+        tags$link(rel = "icon", type = "image/x-icon", href = "images/favicon.ico"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css"),
+        tags$meta(name = "description", content = "Explore any CRAN package: downloads, releases, dependencies, CRAN checks and version differences.")
       ),
-      tags$li(
-        class = "dropdown",
-        tags$a(href = av_cran, "CRAN package:", style = "font-weight:bold;")
-      ),
-      tags$li(
-        class = "dropdown search-input",
-        shinyWidgets::searchInput(
-          "pac",
-          value = "shiny",
-          btnSearch = icon("magnifying-glass"),
-          btnReset = icon("xmark"),
-          placeholder = "Enter a one CRAN package",
-          btnClass = "btn-default btn-outline-secondary",
-          width = 350
+      shiny::useBusyIndicators()
+    ),
+    sidebar = bslib::sidebar(
+      id = "sidebar",
+      width = 320,
+      open = list(desktop = "open", mobile = "always-above"),
+      selectizeInput(
+        "pac",
+        label = tags$span(bsicons::bs_icon("search"), "CRAN package"),
+        choices = NULL,
+        width = "100%",
+        options = list(
+          placeholder = "Search CRAN packages...",
+          maxOptions = 50,
+          openOnFocus = FALSE,
+          closeAfterSelect = TRUE
         )
       ),
-      titleWidth = 250
-    ),
-
-    dashboardSidebar(
-      width = 250,
-      sidebarMenu(
-        menuItem("Package Info", tabName = "package_info", icon = icon("info-circle"), selected = TRUE),
-        menuItem("Package Downloads", tabName = "downloads", icon = icon("chart-line")),
-        menuItem("Differences between Versions", tabName = "version_diff", icon = icon("exchange-alt")),
-        menuItem("CRAN Check Results", tabName = "cran_check", icon = icon("check-circle")),
-        menuItem("Package Deps", tabName = "package_deps", icon = icon("project-diagram")),
-        menuItem("CRAN Releases", tabName = "cran_releases", icon = icon("history")),
-        menuItem("About", tabName = "about", icon = icon("question"))
+      uiOutput("pkg_summary"),
+      tags$div(
+        class = "sidebar-footer small text-body-secondary",
+        "Powered by ",
+        tags$a(href = "https://CRAN.R-project.org/package=pacs", target = "_blank", rel = "noopener", tags$code("pacs")),
+        " and ",
+        tags$a(href = "https://github.com/r-hub/cranlogs", target = "_blank", rel = "noopener", tags$code("cranlogs"))
       )
     ),
 
-    dashboardBody(
-
-      tags$head(tags$link(rel = "icon", type = "image/x-icon", href = "images/favicon.ico")),
-      tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css")),
-
-      tabItems(
-        tabItem(
-          tabName = "package_info",
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Name",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("name"))
-            )
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Title",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("title"))
-            ),
-            box(
-              class = "important-text",
-              title = "CRAN page",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(uiOutput("cran_url"))
-            )
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Description",
-              width = 12,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("description"))
-            ),
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Package Last Version",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("last_version"))
-            ),
-            box(
-              class = "important-text",
-              title = "Package License",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("license"))
-            ),
-            box(
-              class = "important-text",
-              title = "Package Maintainer",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(uiOutput("maintainer"))
-            )
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Publication",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("publication"))
-            ),
-            box(
-              class = "important-text",
-              title = "URL",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(uiOutput("url"))
-            ),
-            box(
-              class = "important-text",
-              title = "BugReports",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(uiOutput("bugreports"))
-            )
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Needs Compilation",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("compilation"))
-            ),
-            box(
-              class = "important-text",
-              title = "System Requirements",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("requirements"))
-            ),
-            box(
-              class = "important-text",
-              title = "Encoding",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("encoding"))
-            )
+    # Overview ---------------------------------------------------------------
+    bslib::nav_panel(
+      title = "Overview",
+      value = "overview",
+      icon = bsicons::bs_icon("grid-1x2"),
+      bslib::layout_column_wrap(
+        width = "240px",
+        fill = FALSE,
+        heights_equal = "row",
+        vbox(
+          "Latest version", textOutput("last_version", inline = TRUE), "tag",
+          p(textOutput("publication_ago", inline = TRUE))
+        ),
+        bslib::value_box(
+          title = "Downloads (last 30 days)",
+          value = textOutput("downloads_month", inline = TRUE),
+          p(textOutput("downloads_month_daily", inline = TRUE)),
+          showcase = plotly::plotlyOutput("downloads_spark", height = "70px"),
+          showcase_layout = "bottom",
+          theme = "teal"
+        ),
+        uiOutput("check_status_box", class = "h-100"),
+        vbox("Dependencies", textOutput("number_user_dependencies", inline = TRUE), "diagram-3",
+          theme = "indigo",
+          p("recursive, needed to install")
+        )
+      ),
+      bslib::layout_columns(
+        col_widths = c(7, 5),
+        bslib::card(
+          bslib::card_header(bsicons::bs_icon("journal-text"), "Description"),
+          bslib::card_body(
+            h4(class = "pkg-title", textOutput("title", inline = TRUE)),
+            p(class = "lead-sm", textOutput("description", inline = TRUE))
           )
         ),
-
-        tabItem(
-          tabName = "downloads",
-          fluidRow(
-            box(
-              title = "Package Downloads Plot",
-              width = 12,
-              solidHeader = TRUE,
-              status = "primary",
-              dateRangeInput("date_input", "Date Range", start = Sys.Date() - 100, end = Sys.Date()),
-              textInput("pac_compare", "Compare with", placeholder = "Packages to compare with, comma seperated."),
-              tags$div(
-                style = "margin-bottom:10px;",
-                tags$a(
-                  href = "https://github.com/gpilgrim2670/ThreeWiseMonkeys?tab=readme-ov-file#whats-the-point",
-                  "ThreeWiseMonkeys package can be used as a zero downloads benchmark"
-                )
-              ),
-              selectizeInput("date_unit", label = "Unit", choices = c("day", "month", "year"), selected = "day"),
-              checkboxInput("add_smooth", "Add Smooth", FALSE),
-              shinycssloaders::withSpinner(plotOutput("downloads_plot", height = "400px"))
-            )
-          )
-        ),
-
-        tabItem(
-          tabName = "version_diff",
-          fluidRow(
-            box(
-              title = "Versions to Compare",
-              width = 12,
-              solidHeader = TRUE,
-              status = "primary",
-              style = "overflow:visible",
-              selectInput("version_new", "Version New:", choices = c("")),
-              selectInput("version_old", "Version Old:", choices = c("")),
-            )
-          ),
-          fluidRow(
-            box(
-              id = "news_diff_box_body",
-              title = "NEWS",
-              width = 12,
-              solidHeader = TRUE,
-              status = "primary",
-              height = 350,
-              shinycssloaders::withSpinner(verbatimTextOutput("news_diff"))
-            )
-          ),
-          fluidRow(
-            box(
-              style = "overflow: scroll !important;",
-              title = "DESCRIPTION Deps Diff",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              footer = "1 == added;0 == not changed;-1 == removed",
-              selectInput(
-                "diff_deps_select",
-                "Types of Dependencies",
-                choices = c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"),
-                selected = c("Depends", "Imports", "LinkingTo"),
-                multiple = TRUE
-              ),
-              shinycssloaders::withSpinner(DT::dataTableOutput("dep_version_diff"))
-            ),
-            box(
-              title = "Namespace Diff",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(verbatimTextOutput("namespace_diff"))
-            )
-          )
-        ),
-
-        tabItem(
-          tabName = "cran_check",
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "RED status",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              footer = "Whether any Flavor got Error or Fail status",
-              uiOutput("red_status")
-            ),
-            box(
-              class = "important-text",
-              title = "CRAN Check Page",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              uiOutput("check_page")
-            )
-          ),
-          fluidRow(
-            box(
-              style = "overflow: scroll !important;",
-              title = "CRAN Check Results",
-              width = 12,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(DT::dataTableOutput("cran_check_results"))
-            )
-          )
-        ),
-
-        tabItem(
-          tabName = "package_deps",
-          fluidRow(
-            box(
-              title = "DESCRIPTION deps",
-              solidHeader = TRUE,
-              width = 12,
-              status = "primary",
-              shinycssloaders::withSpinner(uiOutput("description_deps"))
-            )
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Number of USER Dependencies",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              footer = "Depends, Imports, LinkingTo - Recursive",
-              shinycssloaders::withSpinner(textOutput("number_user_dependencies"))
-            ),
-            box(
-              class = "important-text",
-              title = "Number of DEVELOPER Dependencies",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              footer = "Depends, Imports, LinkingTo, Suggests - Recursive",
-              shinycssloaders::withSpinner(textOutput("number_developer_dependencies"))
-            )
-          ),
-          fluidRow(
-            box(
-              title = "Package USER Dependencies",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(DT::dataTableOutput("user_dependencies")),
-              footer = "Depends, Imports, LinkingTo - Recursive"
-            ),
-            box(
-              style = "overflow: scroll !important;",
-              title = "USER Heavy Dependencies",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              footer = "Depends, Imports, LinkingTo",
-              shinycssloaders::withSpinner(DT::dataTableOutput("user_heavy_dependencies"))
-            )
-          ),
-          fluidRow(
-            box(
-              title = "Package DEVELOPER Dependencies",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(DT::dataTableOutput("developer_dependencies")),
-              footer = "Depends, Imports, LinkingTo, Suggests - Recursive"
-            ),
-            box(
-              style = "overflow: scroll !important;",
-              title = "DEVELOPER Heavy Dependencies",
-              width = 6,
-              solidHeader = TRUE,
-              status = "primary",
-              footer = "Depends, Imports, LinkingTo, Suggests",
-              shinycssloaders::withSpinner(DT::dataTableOutput("developer_heavy_dependencies"))
-            )
-          )
-        ),
-
-        tabItem(
-          tabName = "cran_releases",
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Newest Release",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("newest_release"))
-            ),
-            box(
-              class = "important-text",
-              title = "Oldest Release",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("oldest_release"))
-            ),
-            box(
-              class = "important-text",
-              title = "Years on CRAN",
-              width = 4,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("years_on_cran"))
-            )
-          ),
-          fluidRow(
-            box(
-              class = "important-text",
-              title = "Number of Releases",
-              width = 3,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("number_releases"))
-            ),
-            box(
-              class = "important-text",
-              title = "Minimum Life Duration",
-              width = 3,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("min_releases"))
-            ),
-            box(
-              class = "important-text",
-              title = "Mean Life Duration",
-              width = 3,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("mean_releases"))
-            ),
-            box(
-              class = "important-text",
-              title = "Maximum Life Duration",
-              width = 3,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(textOutput("max_releases"))
-            )
-          ),
-          fluidRow(
-            box(
-              style = "overflow: scroll !important;",
-              title = "CRAN Releases",
-              width = 12,
-              solidHeader = TRUE,
-              status = "primary",
-              shinycssloaders::withSpinner(DT::dataTableOutput("releases_list"))
-            )
-          )
-        ),
-
-        tabItem(
-          tabName = "about",
-          fluidRow(
-            div(
-              class = "col-sm-8",
-              style = "margin: 0px auto; float: none; padding:20px;",
-              a(href = "https://github.com/Polkas/rdevdash/issues", h1("Report Issue")),
-              h2("About This Dashboard"),
-              p(
-                "Welcome to the ",
-                strong("R Package Developer Dashboard"),
-                ", a comprehensive tool designed to streamline the process of tracking and managing CRAN packages."
-              ),
-              h3("Key Dashboard Features"),
-              tags$ul(
-                tags$li(
-                  strong("Package Information:"),
-                  " Quickly retrieve and display detailed information about any CRAN package, including the latest version, license, and maintainer details."
-                ),
-                tags$li(
-                  strong("Package Downloads:"),
-                  " Visualize and compare package download statistics over time."
-                ),
-                tags$li(
-                  strong("Version Differences:"),
-                  " Compare different versions of a package to track changes and updates."
-                ),
-                tags$li(
-                  strong("CRAN Check Results:"),
-                  " View CRAN check results."
-                ),
-                tags$li(
-                  strong("Package Dependencies:"),
-                  " Analyze package dependencies from user and developer perspective."
-                ),
-                tags$li(
-                  strong("CRAN Releases:"),
-                  " Stay updated with all CRAN releases for a package."
-                )
-              ),
-              p(
-                "This dashboard is primarily powered by the ",
-                code("pacs"),
-                " package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN."
-              ),
-              h3("What is ", code("pacs"), "?"),
-              img(src = "https://raw.githubusercontent.com/Polkas/pacs/main/man/figures/pacs_logo.svg", width = "300px", height = "300px"),
-              p(
-                code("pacs"),
-                " is an R package that provides a suite of functions to interact with CRAN packages, analyze dependencies, compare package versions, and much more. It serves as the backbone of this dashboard. For more information, visit the ",
-                a(href = "https://CRAN.R-project.org/package=pacs", "pacs CRAN page", target = "_blank"),
-                "."
+        bslib::card(
+          bslib::card_header(bsicons::bs_icon("card-list"), "Details"),
+          bslib::card_body(
+            class = "p-0",
+            tags$table(
+              class = "table table-sm details-table mb-0",
+              tags$tbody(
+                info_row("Package", textOutput("name", inline = TRUE)),
+                info_row("License", textOutput("license", inline = TRUE)),
+                info_row("Maintainer", uiOutput("maintainer", inline = TRUE)),
+                info_row("Published", textOutput("publication", inline = TRUE)),
+                info_row("CRAN page", uiOutput("cran_url", inline = TRUE)),
+                info_row("URL", uiOutput("url", inline = TRUE)),
+                info_row("Bug reports", uiOutput("bugreports", inline = TRUE)),
+                info_row("Compilation", textOutput("compilation", inline = TRUE)),
+                info_row("Requirements", textOutput("requirements", inline = TRUE)),
+                info_row("Encoding", textOutput("encoding", inline = TRUE))
               )
             )
           )
         )
       )
-    )
+    ),
+
+    # Downloads --------------------------------------------------------------
+    bslib::nav_panel(
+      title = "Downloads",
+      value = "downloads",
+      icon = bsicons::bs_icon("graph-up-arrow"),
+      bslib::layout_column_wrap(
+        width = "220px",
+        fill = FALSE,
+        heights_equal = "row",
+        vbox("Total downloads", textOutput("downloads_total", inline = TRUE), "cloud-download"),
+        vbox("Daily average", textOutput("downloads_avg", inline = TRUE), "calendar-day", theme = "teal"),
+        vbox("Best day", textOutput("downloads_peak", inline = TRUE), "trophy",
+          theme = "indigo",
+          p(textOutput("downloads_peak_date", inline = TRUE))
+        )
+      ),
+      bslib::card(
+        full_screen = TRUE,
+        min_height = "520px",
+        bslib::card_header(
+          class = "d-flex justify-content-between align-items-center",
+          tags$span(bsicons::bs_icon("graph-up"), "Downloads over time"),
+          downloadButton("downloads_csv", "CSV", class = "btn-sm btn-outline-primary", icon = icon("download"))
+        ),
+        bslib::layout_sidebar(
+          sidebar = bslib::sidebar(
+            width = 270,
+            title = "Options",
+            dateRangeInput(
+              "date_input", "Date range",
+              start = Sys.Date() - 365, end = Sys.Date() - 1, max = Sys.Date()
+            ),
+            tags$div(
+              class = "btn-group btn-group-sm w-100 mb-3", role = "group",
+              actionButton("range_30", "30d", class = "btn-outline-secondary"),
+              actionButton("range_90", "90d", class = "btn-outline-secondary"),
+              actionButton("range_365", "1y", class = "btn-outline-secondary"),
+              actionButton("range_1825", "5y", class = "btn-outline-secondary")
+            ),
+            selectizeInput(
+              "pac_compare", "Compare with",
+              choices = NULL, multiple = TRUE,
+              options = list(placeholder = "Add packages...", maxOptions = 50, maxItems = 8, openOnFocus = FALSE, closeAfterSelect = TRUE)
+            ),
+            radioButtons(
+              "date_unit", "Aggregate by",
+              choices = c(Day = "day", Week = "week", Month = "month", Year = "year"),
+              selected = "week", inline = TRUE
+            ),
+            bslib::input_switch("add_smooth", "Trend line", FALSE),
+            bslib::input_switch("log_scale", "Log scale", FALSE),
+            tags$small(
+              class = "text-body-secondary",
+              tags$a(
+                href = "https://github.com/gpilgrim2670/ThreeWiseMonkeys?tab=readme-ov-file#whats-the-point",
+                target = "_blank", rel = "noopener",
+                "ThreeWiseMonkeys"
+              ),
+              " can be used as a zero-downloads benchmark."
+            )
+          ),
+          plotly::plotlyOutput("downloads_plot", height = "440px")
+        )
+      )
+    ),
+
+    # Versions ---------------------------------------------------------------
+    bslib::nav_panel(
+      title = "Versions",
+      value = "version_diff",
+      icon = bsicons::bs_icon("arrow-left-right"),
+      bslib::card(
+        class = "overflow-visible",
+        bslib::card_body(
+          class = "overflow-visible",
+          bslib::layout_columns(
+            col_widths = c(5, 2, 5),
+            selectInput("version_old", "Old version", choices = NULL, width = "100%"),
+            tags$div(
+              class = "d-flex align-items-end justify-content-center h-100 pb-3",
+              actionButton("swap_versions", bsicons::bs_icon("arrow-left-right"), class = "btn-outline-primary", title = "Swap versions", `aria-label` = "Swap versions")
+            ),
+            selectInput("version_new", "New version", choices = NULL, width = "100%")
+          )
+        )
+      ),
+      bslib::card(
+        full_screen = TRUE,
+        max_height = "520px",
+        bslib::card_header(bsicons::bs_icon("newspaper"), "NEWS between versions"),
+        bslib::card_body(class = "news-content", uiOutput("news_diff"))
+      ),
+      bslib::layout_columns(
+        col_widths = c(7, 5),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header(bsicons::bs_icon("box-seam"), "DESCRIPTION dependencies diff"),
+          bslib::card_body(
+            class = "overflow-visible",
+            checkboxGroupInput(
+              "diff_deps_select", NULL,
+              choices = c("Depends", "Imports", "LinkingTo", "Suggests", "Enhances"),
+              selected = c("Depends", "Imports", "LinkingTo"),
+              inline = TRUE
+            ),
+            DT::dataTableOutput("dep_version_diff", fill = FALSE)
+          )
+        ),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header(bsicons::bs_icon("braces"), "NAMESPACE diff"),
+          bslib::card_body(uiOutput("namespace_diff"))
+        )
+      )
+    ),
+
+    # CRAN checks -------------------------------------------------------------
+    bslib::nav_panel(
+      title = "CRAN Checks",
+      value = "cran_check",
+      icon = bsicons::bs_icon("clipboard2-check"),
+      bslib::layout_column_wrap(
+        width = "200px",
+        fill = FALSE,
+        heights_equal = "row",
+        vbox("Overall status", textOutput("red_status", inline = TRUE), "activity",
+          theme = "primary",
+          p("ERROR or FAIL on any flavor")
+        ),
+        vbox("OK", textOutput("checks_ok", inline = TRUE), "check-circle", theme = "success"),
+        vbox("NOTE / WARN", textOutput("checks_warn", inline = TRUE), "exclamation-triangle", theme = "warning"),
+        vbox("ERROR / FAIL", textOutput("checks_error", inline = TRUE), "x-octagon", theme = "danger")
+      ),
+      bslib::card(
+        full_screen = TRUE,
+        bslib::card_header(
+          class = "d-flex justify-content-between align-items-center",
+          tags$span(bsicons::bs_icon("table"), "Check results by flavor"),
+          uiOutput("check_page", inline = TRUE)
+        ),
+        DT::dataTableOutput("cran_check_results", fill = FALSE)
+      )
+    ),
+
+    # Dependencies -----------------------------------------------------------
+    bslib::nav_panel(
+      title = "Dependencies",
+      value = "package_deps",
+      icon = bsicons::bs_icon("diagram-3"),
+      bslib::layout_column_wrap(
+        width = "260px",
+        fill = FALSE,
+        heights_equal = "row",
+        vbox(
+          "User dependencies", textOutput("number_user_dependencies_2", inline = TRUE), "person",
+          p("Depends, Imports, LinkingTo - recursive")
+        ),
+        vbox("Developer dependencies", textOutput("number_developer_dependencies", inline = TRUE), "tools",
+          theme = "indigo",
+          p("+ Suggests - recursive")
+        )
+      ),
+      bslib::card(
+        bslib::card_header(bsicons::bs_icon("file-earmark-text"), "DESCRIPTION dependencies"),
+        bslib::card_body(class = "p-0", uiOutput("description_deps"))
+      ),
+      bslib::navset_card_underline(
+        full_screen = TRUE,
+        title = tags$span(bsicons::bs_icon("list-nested"), "Dependency tree"),
+        bslib::nav_panel("User", DT::dataTableOutput("user_dependencies", fill = FALSE)),
+        bslib::nav_panel("Developer", DT::dataTableOutput("developer_dependencies", fill = FALSE)),
+        bslib::nav_panel("Heavy (user)", DT::dataTableOutput("user_heavy_dependencies", fill = FALSE)),
+        bslib::nav_panel("Heavy (developer)", DT::dataTableOutput("developer_heavy_dependencies", fill = FALSE))
+      )
+    ),
+
+    # Releases ---------------------------------------------------------------
+    bslib::nav_panel(
+      title = "Releases",
+      value = "cran_releases",
+      icon = bsicons::bs_icon("clock-history"),
+      bslib::layout_column_wrap(
+        width = "220px",
+        fill = FALSE,
+        heights_equal = "row",
+        vbox(
+          "Releases", textOutput("number_releases", inline = TRUE), "tags",
+          p("newest ", textOutput("newest_release", inline = TRUE))
+        ),
+        vbox("Years on CRAN", textOutput("years_on_cran", inline = TRUE), "hourglass-split",
+          theme = "teal",
+          p("first ", textOutput("oldest_release", inline = TRUE))
+        ),
+        vbox("Mean release life", textOutput("mean_releases", inline = TRUE), "speedometer2",
+          theme = "indigo",
+          p("min ", textOutput("min_releases", inline = TRUE), " / max ", textOutput("max_releases", inline = TRUE))
+        )
+      ),
+      bslib::card(
+        full_screen = TRUE,
+        bslib::card_header(bsicons::bs_icon("bar-chart-steps"), "Release timeline"),
+        plotly::plotlyOutput("releases_plot", height = "320px")
+      ),
+      bslib::card(
+        full_screen = TRUE,
+        bslib::card_header(bsicons::bs_icon("table"), "All CRAN releases"),
+        DT::dataTableOutput("releases_list", fill = FALSE)
+      )
+    ),
+
+    # About ------------------------------------------------------------------
+    bslib::nav_panel(
+      title = "About",
+      value = "about",
+      icon = bsicons::bs_icon("question-circle"),
+      tags$div(
+        class = "about-page",
+        bslib::card(
+          bslib::card_body(
+            class = "p-4 p-lg-5",
+            h2("R Package Developer Dashboard"),
+            p(
+              class = "lead",
+              "A fast, friendly way to inspect any CRAN package - built for R package developers and maintainers."
+            ),
+            bslib::layout_column_wrap(
+              width = "260px",
+              fill = FALSE,
+              heights_equal = "row",
+              about_feature("grid-1x2", "Overview", "Latest version, license, maintainer, links and recent downloads at a glance."),
+              about_feature("graph-up-arrow", "Downloads", "Interactive download trends, comparisons with other packages and CSV export."),
+              about_feature("arrow-left-right", "Versions", "NEWS, dependency and NAMESPACE differences between any two releases."),
+              about_feature("clipboard2-check", "CRAN Checks", "Check results across all CRAN flavors with a quick health summary."),
+              about_feature("diagram-3", "Dependencies", "Recursive user and developer dependencies, plus the heaviest ones."),
+              about_feature("clock-history", "Releases", "Full release history and timeline of the package on CRAN.")
+            ),
+            h4(class = "mt-4", "Powered by ", tags$code("pacs")),
+            tags$div(
+              class = "d-flex flex-column flex-md-row gap-4 align-items-center",
+              tags$img(
+                src = "https://raw.githubusercontent.com/Polkas/pacs/main/man/figures/pacs_logo.svg",
+                alt = "pacs logo", width = "140", height = "140"
+              ),
+              p(
+                tags$code("pacs"),
+                " is an R package that provides a suite of functions to interact with CRAN packages, analyze dependencies,",
+                " compare package versions, and much more. It serves as the backbone of this dashboard. For more information, visit the ",
+                tags$a(href = "https://CRAN.R-project.org/package=pacs", "pacs CRAN page", target = "_blank", rel = "noopener"),
+                "."
+              )
+            ),
+            tags$div(
+              class = "d-flex flex-wrap gap-2 mt-3",
+              tags$a(
+                class = "btn btn-primary", href = "https://github.com/Polkas/rdevdash", target = "_blank", rel = "noopener",
+                bsicons::bs_icon("github"), " Source code"
+              ),
+              tags$a(
+                class = "btn btn-outline-primary", href = "https://github.com/Polkas/rdevdash/issues", target = "_blank", rel = "noopener",
+                bsicons::bs_icon("bug"), " Report an issue"
+              )
+            )
+          )
+        )
+      )
+    ),
+    bslib::nav_spacer(),
+    bslib::nav_item(
+      tags$a(
+        class = "nav-link", href = "https://github.com/Polkas/rdevdash", target = "_blank", rel = "noopener",
+        title = "Source code on GitHub", `aria-label` = "Source code on GitHub",
+        bsicons::bs_icon("github")
+      )
+    ),
+    bslib::nav_item(bslib::input_dark_mode(id = "dark_mode"))
+  )
+}
+
+about_feature <- function(icon, title, text) {
+  tags$div(
+    class = "about-feature",
+    tags$div(class = "about-feature-icon", bsicons::bs_icon(icon)),
+    tags$div(tags$strong(title), tags$p(class = "mb-0 small text-body-secondary", text))
   )
 }

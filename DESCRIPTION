@@ -9,24 +9,26 @@ Description:
 License: Apache License (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.3
 Imports: 
+    bsicons,
+    bslib (>= 0.8.0),
+    cachem,
     cranlogs,
     dplyr,
-    DT,
-    ggplot2,
+    DT (>= 0.27),
+    htmltools,
     httr2,
     lubridate,
     magrittr,
     pacs,
-    scales,
-    shiny,
-    shinycssloaders,
-    shinydashboard,
-    shinyWidgets,
+    plotly,
+    rlang,
+    shiny (>= 1.8.1),
     stringr
 Suggests: 
     covr,
     devtools,
+    pkgload,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
