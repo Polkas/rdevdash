@@ -23,6 +23,7 @@ Imports:
     magrittr,
     pacs,
     plotly,
+    pkgload,
     rlang,
     shiny (>= 1.8.1),
     stringr
