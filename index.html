@@ -69,6 +69,15 @@
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/local_install_deps.html" class="external-link">local_install_deps</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">shiny</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/shiny/man/runApp.html" class="external-link">runApp</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="deploy-to-posit-connect-cloud">Deploy to Posit Connect Cloud<a class="anchor" aria-label="anchor" href="#deploy-to-posit-connect-cloud"></a>
+</h2>
+<p>The repository includes a <code>manifest.json</code> that records the deployment’s R version and package dependencies. Regenerate it after changing dependencies or updating the app:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rsconnect"</span><span class="op">)</span> <span class="co"># if not already installed</span></span>
+<span><span class="fu">rsconnect</span><span class="fu">::</span><span class="fu">writeManifest</span><span class="op">(</span>appDir <span class="op">=</span> <span class="st">"."</span>, appMode <span class="op">=</span> <span class="st">"shiny"</span><span class="op">)</span></span></code></pre></div>
+<p>Commit the updated manifest along with the app changes, push to the branch configured in Connect Cloud, and publish again. The app loads its package source with <code>pkgload</code> at startup, so <code>pkgload</code> is a runtime dependency, not just a development suggestion. Shiny 1.9.0 or newer is required for busy indicators.</p>
 <p>This dashboard is primarily powered by the <code>pacs</code> package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN.</p>
 <p>What is <code>pacs</code> ?</p>
 <p><code>pacs</code> is an R package that provides a suite of functions to interact with CRAN packages, analyze dependencies, compare package versions, and much more. It serves as the backbone of this dashboard. For more information, visit <a href="https://CRAN.R-project.org/package=pacs" class="external-link">the pacs CRAN page</a>.</p>
