@@ -48,6 +48,7 @@ info_row <- function(label, output) {
 #' @return A Shiny UI definition created using \code{bslib::page_navbar}.
 #' @import shiny
 #' @import magrittr
+#' @importFrom pkgload load_all
 #' @export
 app_ui <- function() {
   page_title <- "R Dev Dashboard"

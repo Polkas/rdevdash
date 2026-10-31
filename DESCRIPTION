@@ -25,11 +25,10 @@ Imports:
     plotly,
     pkgload,
     rlang,
-    shiny (>= 1.8.1),
+    shiny (>= 1.9.0),
     stringr
 Suggests: 
     covr,
     devtools,
-    pkgload,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

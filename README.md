@@ -27,6 +27,22 @@ pak::local_install_deps()
 shiny::runApp()
 ```
 
+## Deploy to Posit Connect Cloud
+
+The repository includes a `manifest.json` that records the deployment's R
+version and package dependencies. Regenerate it after changing dependencies
+or updating the app:
+
+```r
+install.packages("rsconnect") # if not already installed
+rsconnect::writeManifest(appDir = ".", appMode = "shiny")
+```
+
+Commit the updated manifest along with the app changes, push to the branch
+configured in Connect Cloud, and publish again. The app loads its package source
+with `pkgload` at startup, so `pkgload` is a runtime dependency, not just a
+development suggestion. Shiny 1.9.0 or newer is required for busy indicators.
+
 This dashboard is primarily powered by the `pacs` package, which is an essential toolkit for R developers looking to gain insights into package development, maintenance, and deployment on CRAN.
 
 What is `pacs` ?
