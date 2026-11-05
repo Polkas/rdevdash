@@ -9,7 +9,7 @@ Key Dashboard Features:
 - **Package Downloads**: Interactive (zoom/hover) download trends aggregated by day, week, month or year, comparisons with other packages, optional trend lines, log scale and CSV export.
 - **Version Differences**: NEWS, DESCRIPTION dependencies and NAMESPACE differences between any two releases.
 - **CRAN Check Results**: Check results for every CRAN flavor with a status summary.
-- **Package Dependencies**: Recursive user and developer dependencies, plus the heaviest ones and the package's declared `SystemRequirements`.
+- **Package Dependencies**: Recursive user and developer dependencies, plus the heaviest ones and recursive `SystemRequirements` (system libraries needed by the package and all its dependencies).
 - **CRAN Releases**: Full release history and an interactive release timeline.
 
 Quality of life:

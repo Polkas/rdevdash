@@ -215,3 +215,13 @@ test_that("app_ui builds a page", {
   expect_match(html, "R Dev Dashboard")
   expect_match(html, 'id="pac"')
 })
+
+test_that("sysreqs_table keeps the package and dependencies with system requirements", {
+  sysreqs <- c(sf = "GDAL, GEOS", xml2 = "libxml2", curl = "libcurl")
+  tab <- sysreqs_table("sf", c("xml2", "dplyr", "sf"), sysreqs)
+  expect_equal(tab$Package, c("sf", "xml2"))
+  expect_equal(tab$Via, c("package itself", "dependency"))
+  expect_equal(tab$SystemRequirements, c("GDAL, GEOS", "libxml2"))
+  expect_equal(nrow(sysreqs_table("dplyr", character(0), sysreqs)), 0)
+  expect_equal(nrow(sysreqs_table("dplyr", NULL, sysreqs)), 0)
+})

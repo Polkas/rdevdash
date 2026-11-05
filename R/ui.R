@@ -328,6 +328,10 @@ app_ui <- function() {
         vbox("Developer dependencies", textOutput("number_developer_dependencies", inline = TRUE), "tools",
           theme = "indigo",
           p("+ Suggests - recursive")
+        ),
+        vbox("System requirements", textOutput("number_sysreqs", inline = TRUE), "pc-display",
+          theme = "teal",
+          p("packages needing system libraries - recursive")
         )
       ),
       bslib::card(
@@ -335,8 +339,17 @@ app_ui <- function() {
         bslib::card_body(class = "p-0", uiOutput("description_deps"))
       ),
       bslib::card(
+        full_screen = TRUE,
         bslib::card_header(bsicons::bs_icon("pc-display"), "System requirements"),
-        bslib::card_body(textOutput("system_requirements"))
+        bslib::card_body(
+          tags$p(tags$strong("This package: "), textOutput("system_requirements", inline = TRUE)),
+          radioButtons(
+            "sysreqs_scope", "Recursive, including dependencies needed for",
+            choices = c("Installation (Depends, Imports, LinkingTo)" = "user", "Development (+ Suggests)" = "developer"),
+            selected = "user", inline = TRUE
+          ),
+          DT::dataTableOutput("sysreqs_recursive", fill = FALSE)
+        )
       ),
       bslib::navset_card_underline(
         full_screen = TRUE,

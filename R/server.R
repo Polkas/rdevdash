@@ -673,6 +673,27 @@ app_server <- function(input, output, session) {
     if (is.na(requirements)) "No system requirements declared in DESCRIPTION." else gsub("\\s+", " ", requirements)
   })
 
+  sysreqs_db <- reactive({
+    safely_validate(cran_sysreqs(), "Could not fetch system requirements from CRAN.")
+  })
+
+  sysreqs_recursive <- function(deps) {
+    sysreqs_table(pac(), as.data.frame(deps)$Package, sysreqs_db())
+  }
+
+  output$number_sysreqs <- renderText(nrow(sysreqs_recursive(user_deps())))
+
+  output$sysreqs_recursive <- DT::renderDataTable({
+    deps <- if (identical(input$sysreqs_scope, "developer")) dev_deps() else user_deps()
+    tab <- sysreqs_recursive(deps)
+    validate(need(nrow(tab) > 0, "No system requirements in this package or its dependencies."))
+    tab$Package <- pkg_link_html(tab$Package)
+    tab$Via <- ifelse(tab$Via == "package itself", badge_html("package", "primary"), badge_html("dependency", "secondary"))
+    tab$SystemRequirements <- htmltools::htmlEscape(tab$SystemRequirements)
+    names(tab)[names(tab) == "SystemRequirements"] <- "System requirements"
+    dt_table(tab, page_length = 15)
+  })
+
   ### Info Tab -----------------------------------------------------------------
 
   output$name <- renderText({

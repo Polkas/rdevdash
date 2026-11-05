@@ -58,6 +58,34 @@ cran_packages <- function() {
   })
 }
 
+#' SystemRequirements of every CRAN package, named by package.
+#'
+#' The PACKAGES index does not carry this field, so the full CRAN package
+#' database is used (about 1s to fetch, then cached).
+#' @noRd
+cran_sysreqs <- function() {
+  cached(list("cran_sysreqs", cran_repo()), {
+    db <- tools::CRAN_package_db()
+    db <- db[!duplicated(db$Package) & !is.na(db$SystemRequirements), c("Package", "SystemRequirements")]
+    stats::setNames(trimws(gsub("\\s+", " ", db$SystemRequirements)), db$Package)
+  })
+}
+
+#' Packages from `pkgs` which declare system requirements.
+#' @return A data frame with `Package`, `Via` and `SystemRequirements` columns.
+#' @noRd
+sysreqs_table <- function(pkg, deps, sysreqs) {
+  pkgs <- unique(c(pkg, deps))
+  pkgs <- pkgs[pkgs %in% names(sysreqs)]
+  pkgs <- pkgs[nzchar(sysreqs[pkgs])]
+  data.frame(
+    Package = pkgs,
+    Via = ifelse(pkgs == pkg, "package itself", "dependency"),
+    SystemRequirements = unname(sysreqs[pkgs]),
+    stringsAsFactors = FALSE
+  )
+}
+
 valid_release_history <- function(data) {
   fields <- c("Package", "Version", "Released", "Archived", "LifeDuration")
   is.data.frame(data) &&
