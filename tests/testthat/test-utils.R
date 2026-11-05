@@ -45,6 +45,58 @@ test_that("split_urls and repo_url parse DESCRIPTION fields", {
   expect_equal(split_urls(NULL), character(0))
   expect_equal(repo_url(urls), "https://github.com/tidyverse/dplyr")
   expect_true(is.na(repo_url("https://example.org")))
+  expect_equal(
+    repo_url("https://pkg.example.org", "https://github.com/owner/project/issues"),
+    "https://github.com/owner/project"
+  )
+  expect_equal(
+    repo_url("https://github.com/owner/first.git#readme", "https://github.com/owner/second/issues"),
+    "https://github.com/owner/first"
+  )
+  expect_true(is.na(repo_url("https://example.org/github.com/owner/project")))
+  expect_true(is.na(repo_url(character(0), character(0))))
+  expect_equal(
+    repo_url("https://gitlab.com/group/subgroup/project/-/issues"),
+    "https://gitlab.com/group/subgroup/project"
+  )
+})
+
+test_that("GitHub issue counts are cached and use separate issue-only queries", {
+  app_cache()$reset()
+  requests <- character(0)
+  httr2::with_mocked_responses(function(req) {
+    requests <<- c(requests, utils::URLdecode(req$url))
+    httr2::response(
+      status_code = 200,
+      headers = list("Content-Type" = "application/json"),
+      body = charToRaw('{"total_count":12,"incomplete_results":false}')
+    )
+  }, {
+    expect_equal(github_issue_counts("https://github.com/owner/repo"), c(open = 12, closed = 12))
+    expect_equal(github_issue_counts("https://github.com/owner/repo"), c(open = 12, closed = 12))
+  })
+  expect_length(requests, 2)
+  expect_match(requests[1], "is:issue")
+  expect_match(requests[1], "is:open")
+  expect_match(requests[2], "is:closed")
+  expect_error(github_issue_counts("https://gitlab.com/owner/repo"), "GitHub repositories only")
+})
+
+test_that("incomplete GitHub issue counts are not cached", {
+  app_cache()$reset()
+  calls <- 0L
+  httr2::with_mocked_responses(function(req) {
+    calls <<- calls + 1L
+    httr2::response(
+      status_code = 200,
+      headers = list("Content-Type" = "application/json"),
+      body = charToRaw('{"total_count":12,"incomplete_results":true}')
+    )
+  }, {
+    expect_error(github_issue_counts("https://github.com/owner/repo"), "incomplete or invalid")
+    expect_error(github_issue_counts("https://github.com/owner/repo"), "incomplete or invalid")
+  })
+  expect_equal(calls, 2L)
 })
 
 test_that("parse_maintainer splits name and email", {
@@ -97,9 +149,12 @@ test_that("cached evaluates once per key and does not cache errors", {
   err_key <- list("err-key", runif(1))
   expect_error(cached(err_key, stop("boom")), "boom")
   expect_equal(cached(err_key, "ok"), "ok")
+  null_key <- list("null-key", runif(1))
+  expect_null(cached(null_key, NULL))
+  expect_null(cached(null_key, stop("cached NULL was lost")))
 })
 
-test_that("release history falls back after a failed CRAN request", {
+test_that("release history prefers CRANDB and falls back after a failed request", {
   history <- data.frame(
     Package = "test.release.fallback",
     Version = c("1.0", "1.1"),
@@ -111,15 +166,15 @@ test_that("release history falls back after a failed CRAN request", {
   local_mocked_bindings(
     pac_timemachine = function(pac, source) {
       sources <<- c(sources, source)
-      if (source == "cran") stop("connection failed")
+      if (source == "crandb") stop("connection failed")
       history
     },
     .package = "pacs"
   )
   app_cache()$reset()
-  expect_warning(result <- fetch_release_history(history$Package[1]), "Using crandb instead")
+  expect_warning(result <- fetch_release_history(history$Package[1]), "Using cran instead")
   expect_equal(result, history)
-  expect_equal(sources, c("cran", "crandb"))
+  expect_equal(sources, c("crandb", "cran"))
   expect_equal(fetch_release_history(history$Package[1]), history)
   expect_length(sources, 2)
 })

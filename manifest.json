@@ -2997,7 +2997,7 @@
       "checksum": "0db8e911927a611e985c21afd36104fd"
     },
     "NAMESPACE": {
-      "checksum": "ade8667089c4aae1d9ccc75a129f91c2"
+      "checksum": "2de441d0a5105f8394ddbb82d68f7d04"
     },
     "project_images/app_screen.png": {
       "checksum": "f0e76dcd364bb5102153a02dd7224185"
@@ -3015,25 +3015,25 @@
       "checksum": "9ac9511ddb079398e92a77d16086f875"
     },
     "R/server.R": {
-      "checksum": "6888c9e669bd8ddca23ac26591a83f24"
+      "checksum": "1004939373bdf27b73ab9cb7a45c8957"
     },
     "R/ui.R": {
-      "checksum": "a91a07a52a30adf3089fb18caf2cfeb7"
+      "checksum": "e8c7b97cb27ef4ea680b5debdfe64986"
     },
     "R/utils.R": {
-      "checksum": "9b7694baba9ac019678c06bc02f181bb"
+      "checksum": "139aa7baa503b5f4696a9c433272d721"
     },
     "README.md": {
-      "checksum": "05986f5e31e3e3e8e8bdfe34ab8644c1"
+      "checksum": "a606bda23f98a8914e80cf8aecb21e36"
     },
     "tests/testthat.R": {
       "checksum": "d12d70645d1e1cf78fd67f9b2db859e0"
     },
     "tests/testthat/test-server.R": {
-      "checksum": "f1c1e56e2eb4de4461112b759addfa01"
+      "checksum": "adc52eea691e191100a1379b4802d0ef"
     },
     "tests/testthat/test-utils.R": {
-      "checksum": "3efd4331840e949f26411537a7ab43fb"
+      "checksum": "fd1ae87aa53d5ea0e6960a931fbcd24e"
     },
     "www/css/styles.css": {
       "checksum": "0239581c66994f6909b89c1f7e6dff0e"

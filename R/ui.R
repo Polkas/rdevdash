@@ -155,6 +155,16 @@ app_ui <- function() {
             )
           )
         )
+      ),
+      bslib::accordion(
+        id = "github_details",
+        open = FALSE,
+        bslib::accordion_panel(
+          "GitHub issues (open / closed)",
+          value = "issues",
+          icon = bsicons::bs_icon("github"),
+          uiOutput("github_issues")
+        )
       )
     ),
 
@@ -323,6 +333,10 @@ app_ui <- function() {
       bslib::card(
         bslib::card_header(bsicons::bs_icon("file-earmark-text"), "DESCRIPTION dependencies"),
         bslib::card_body(class = "p-0", uiOutput("description_deps"))
+      ),
+      bslib::card(
+        bslib::card_header(bsicons::bs_icon("pc-display"), "System requirements"),
+        bslib::card_body(textOutput("system_requirements"))
       ),
       bslib::navset_card_underline(
         full_screen = TRUE,

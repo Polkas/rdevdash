@@ -5,7 +5,7 @@ test_that("app_server initializes and processes inputs correctly", {
 
   testServer(app_server, {
     # Simulate input for 'pac' (package name)
-    session$setInputs(pac = "shiny")
+    session$setInputs(pac = "shiny", nav = "version_diff")
 
     # Check that 'pac' reactive returns the correct package name
     expect_equal(pac(), "shiny")
@@ -91,4 +91,82 @@ test_that("app_server rejects packages that are not on CRAN", {
     session$setInputs(pac = "surely.not.a.cran.package")
     expect_error(pac(), "not a valid CRAN package")
   })
+})
+
+test_that("Overview never fetches release history and Versions loads it on demand", {
+  app_cache()$reset()
+  on.exit(app_cache()$reset(), add = TRUE)
+  calls <- 0L
+  issue_calls <- 0L
+  local_mocked_bindings(
+    cran_packages = function() c("shiny", "example"),
+    github_issue_counts = function(repo) {
+      issue_calls <<- issue_calls + 1L
+      c(open = 12, closed = 345)
+    },
+    fetch_release_history = function(pac) {
+      calls <<- calls + 1L
+      data.frame(
+        Package = pac,
+        Version = c("1.0", "2.0"),
+        Released = as.Date(c("2024-01-01", "2024-02-01")),
+        Archived = as.Date(c("2024-02-01", NA)),
+        LifeDuration = as.difftime(c(31, 60), units = "days")
+      )
+    }
+  )
+  local_mocked_bindings(
+    pac_last = function(...) "2.0",
+    pac_description = function(...) list(
+      Title = "Test package", Description = "An offline fixture.",
+      `Date/Publication` = "2024-02-01",
+      URL = "https://docs.example.org",
+      BugReports = "https://github.com/owner/project/issues",
+      SystemRequirements = "C++17,\n GNU make"
+    ),
+    pac_checkpage = function(...) data.frame(Flavor = "test", Status = "OK"),
+    pac_checkred = function(...) FALSE,
+    pac_deps_user = function(...) data.frame(Package = character(0), Version = character(0)),
+    pac_deps_dev = function(...) data.frame(Package = character(0), Version = character(0)),
+    pac_deps_heavy = function(...) data.frame(Package = character(0), NrUniqueDeps = integer(0)),
+    .package = "pacs"
+  )
+  local_mocked_bindings(
+    cran_downloads = function(...) data.frame(date = Sys.Date() - 1, package = "shiny", count = 10),
+    .package = "cranlogs"
+  )
+  testServer(app_server, {
+    session$setInputs(pac = "shiny", nav = "overview")
+    expect_equal(calls, 0L)
+    expect_equal(issue_calls, 0L)
+    expect_match(output$pkg_summary$html, 'href="https://github.com/owner/project"')
+    expect_equal(output$system_requirements, "C++17, GNU make")
+    session$setInputs(nav = "version_diff")
+    expect_equal(calls, 1L)
+    session$setInputs(nav = "overview", pac = "example")
+    expect_equal(calls, 1L)
+    session$setInputs(nav = "cran_releases")
+    expect_equal(get_timemachine()$Version, c("1.0", "2.0"))
+    expect_equal(calls, 2L)
+    session$setInputs(nav = "overview", github_details = "issues")
+    expect_match(output$github_issues$html, "Open issues:")
+    expect_match(output$github_issues$html, "345")
+    expect_match(output$github_issues$html, "is%3Aissue\\+is%3Aclosed")
+    expect_equal(issue_calls, 1L)
+  })
+})
+
+test_that("cached results are reused between Shiny sessions in the same worker", {
+  calls <- 0L
+  key <- list("cross-session-cache", runif(1))
+  local_mocked_bindings(cran_packages = function() "shiny")
+  for (i in seq_len(2)) {
+    testServer(app_server, {
+      expect_equal(cached(key, {
+        calls <<- calls + 1L
+        "shared"
+      }), "shared")
+    })
+  }
+  expect_equal(calls, 1L)
 })

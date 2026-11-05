@@ -5,20 +5,21 @@
 Welcome to the R Package Developer Dashboard, a comprehensive tool designed to streamline the process of tracking and managing CRAN packages.
 
 Key Dashboard Features:
-- **Package Overview**: The latest version, license, maintainer, links, CRAN check health and last month's downloads (with a sparkline) at a glance.
+- **Package Overview**: The latest version, license, maintainer, links, CRAN check health and last month's downloads (with a sparkline) at a glance. Expand **GitHub issues** for open/closed issue counts and links (pull requests excluded). Repository links are discovered from both `URL` and `BugReports`.
 - **Package Downloads**: Interactive (zoom/hover) download trends aggregated by day, week, month or year, comparisons with other packages, optional trend lines, log scale and CSV export.
 - **Version Differences**: NEWS, DESCRIPTION dependencies and NAMESPACE differences between any two releases.
 - **CRAN Check Results**: Check results for every CRAN flavor with a status summary.
-- **Package Dependencies**: Recursive user and developer dependencies, plus the heaviest ones.
+- **Package Dependencies**: Recursive user and developer dependencies, plus the heaviest ones and the package's declared `SystemRequirements`.
 - **CRAN Releases**: Full release history and an interactive release timeline.
 
 Quality of life:
 - Modern [`bslib`](https://rstudio.github.io/bslib/) (Bootstrap 5) interface with a **light/dark mode** toggle.
 - **Autocomplete search** over all CRAN packages.
 - **Shareable links** - the selected package and page are kept in the URL, e.g. `?pkg=dplyr&tab=downloads`.
-- **Caching** of all network calls (shared across sessions, 6 hours), so revisiting a package is instant.
+- **In-memory caching** of network results for up to 6 hours, shared by sessions within the same R worker. Cached results avoid repeated requests; errors are not cached. Each worker has its own cache, which is cleared on restart or redeployment.
+- Release history is fetched only on the Versions and Releases pages. GitHub issue counts are fetched only when their panel is expanded, then cached.
 - Friendly messages instead of errors when something is not available (e.g. a package without a NEWS file).
-- Release history uses CRANDB as a fallback when CRAN's HTML pages cannot be read; failed requests are logged for deployment troubleshooting.
+- Release history prefers CRANDB to avoid slow CRAN HTML scraping, with CRAN as a fallback; failed requests are logged for deployment troubleshooting.
 
 ## Run locally
 
@@ -27,18 +28,6 @@ Quality of life:
 pak::local_install_deps()
 shiny::runApp()
 ```
-
-## Deploy to Connect Cloud
-
-Regenerate the deployment manifest after changing runtime dependencies or app files:
-
-```r
-rsconnect::writeManifest(appDir = ".")
-```
-
-Commit the app changes and the regenerated `manifest.json` to the branch used by
-Connect Cloud, then republish. The runtime needs `pkgload` to load this repository
-as an R package; it is included in `Imports`.
 
 ## Deploy to Posit Connect Cloud
 

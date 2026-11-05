@@ -83,6 +83,7 @@ app_server <- function(input, output, session) {
   })
 
   get_timemachine <- reactive({
+    req(input$nav %in% c("version_diff", "cran_releases"))
     p <- pac()
     safely_validate(
       fetch_release_history(p),
@@ -104,12 +105,18 @@ app_server <- function(input, output, session) {
     if (is.null(val) || length(val) == 0 || all(is.na(val)) || !nzchar(val[1])) NA_character_ else val
   }
 
-  observeEvent(pac(), {
+  versions_package <- reactiveVal(NULL)
+  observeEvent(list(pac(), input$nav), {
+    req(identical(input$nav, "version_diff"))
+    if (identical(versions_package(), pac())) {
+      return()
+    }
     updateSelectInput(session, "version_old", choices = character(0))
     updateSelectInput(session, "version_new", choices = character(0))
     tags_pac <- rev(get_timemachine()[["Version"]])
     updateSelectInput(session, "version_old", choices = tags_pac, selected = tags_pac[min(2, length(tags_pac))])
     updateSelectInput(session, "version_new", choices = tags_pac, selected = tags_pac[1])
+    versions_package(pac())
   })
 
   observeEvent(input$swap_versions, {
@@ -139,8 +146,8 @@ app_server <- function(input, output, session) {
     }
     p <- pac()
     urls <- split_urls(desc_field("URL"))
-    repo <- repo_url(urls)
     bugs <- split_urls(desc_field("BugReports"))
+    repo <- repo_url(urls, bugs)
     status <- tryCatch(check_overall(), error = function(e) NA_character_)
 
     link_btn <- function(href, icon, label) {
@@ -169,6 +176,31 @@ app_server <- function(input, output, session) {
     )
   })
 
+  output$github_issues <- renderUI({
+    req("issues" %in% input$github_details)
+    repo <- repo_url(split_urls(desc_field("URL")), split_urls(desc_field("BugReports")))
+    if (is.na(repo) || !grepl("^https://github\\.com/", repo)) {
+      return(empty_state("No GitHub repository found in URL or BugReports.", "github"))
+    }
+    counts <- safely_validate(
+      github_issue_counts(repo),
+      "GitHub issue counts are unavailable (the repository may be private or the API rate limit reached)."
+    )
+    tags$div(
+      class = "d-flex flex-wrap gap-3",
+      lapply(names(counts), function(state) {
+        tags$a(
+          class = "btn btn-outline-secondary",
+          href = paste0(repo, "/issues?q=is%3Aissue+is%3A", state),
+          target = "_blank", rel = "noopener",
+          bsicons::bs_icon(if (state == "open") "record-circle" else "check-circle"),
+          paste(if (state == "open") "Open" else "Closed", "issues:"),
+          tags$span(class = "badge text-bg-secondary ms-1", format(counts[[state]], big.mark = ",", scientific = FALSE, trim = TRUE))
+        )
+      })
+    )
+  })
+
   ### Version Diff Tab ---------------------------------------------------------
 
   pac_news <- reactive({
@@ -183,6 +215,7 @@ app_server <- function(input, output, session) {
 
   versions_ok <- reactive({
     req(input$version_old, input$version_new)
+    req(all(c(input$version_old, input$version_new) %in% get_timemachine()$Version))
     validate(
       need(
         isTRUE(utils::compareVersion(input$version_new, input$version_old) == 1),
@@ -633,6 +666,11 @@ app_server <- function(input, output, session) {
       class = "table details-table deps-table mb-0",
       tags$tbody(rows)
     )
+  })
+
+  output$system_requirements <- renderText({
+    requirements <- desc_field("SystemRequirements")
+    if (is.na(requirements)) "No system requirements declared in DESCRIPTION." else gsub("\\s+", " ", requirements)
   })
 
   ### Info Tab -----------------------------------------------------------------

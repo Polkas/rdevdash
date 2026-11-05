@@ -71,13 +71,13 @@ valid_release_history <- function(data) {
     all(is.finite(as.numeric(data$LifeDuration)))
 }
 
-#' Retrieve release history, using CRANDB when CRAN HTML cannot be read.
+#' Retrieve release history, preferring CRANDB over slower CRAN HTML scraping.
 #' @noRd
 fetch_release_history <- function(pac) {
   cached(list("release_history", pac), {
     failures <- character(0)
     result <- NULL
-    for (source in c("cran", "crandb")) {
+    for (source in c("crandb", "cran")) {
       data <- tryCatch(
         pacs::pac_timemachine(pac, source = source),
         error = function(e) {
@@ -190,9 +190,46 @@ parse_maintainer <- function(x) {
 
 #' Best GitHub/GitLab/Codeberg repository link from the URL field.
 #' @noRd
-repo_url <- function(urls) {
-  hit <- urls[grepl("(github\\.com|gitlab\\.com|codeberg\\.org|bitbucket\\.org)/[^/]+/[^/]+", urls)]
-  if (length(hit)) hit[[1]] else NA_character_
+repo_url <- function(urls, bugreports = character(0)) {
+  candidates <- c(urls, bugreports)
+  pattern <- "^https?://(?:www\\.)?(github\\.com|gitlab\\.com|codeberg\\.org|bitbucket\\.org)/([^/?#\\s]+)/([^/?#\\s]+)"
+  for (url in candidates) {
+    match <- regmatches(url, regexec(pattern, url, perl = TRUE))[[1]]
+    if (length(match)) {
+      if (identical(tolower(match[2]), "gitlab.com")) {
+        return(sub("\\.git$", "", sub("/-(/.*)?$", "", sub("[?#].*$", "", url))))
+      }
+      return(sprintf("https://%s/%s/%s", tolower(match[2]), match[3], sub("\\.git$", "", match[4])))
+    }
+  }
+  NA_character_
+}
+
+#' Fetch actual issue counts, excluding pull requests from GitHub's issue search.
+#' @noRd
+github_issue_counts <- function(repo) {
+  validate(need(
+    length(repo) == 1 && !is.na(repo) && grepl("^https://github\\.com/[^/]+/[^/]+$", repo),
+    "Issue counts are available for GitHub repositories only."
+  ))
+  cached(list("github_issue_counts", repo), {
+    slug <- sub("^https://github\\.com/", "", repo)
+    counts <- vapply(c("open", "closed"), function(state) {
+      response <- httr2::request("https://api.github.com/search/issues") %>%
+        httr2::req_url_query(q = paste0("repo:", slug, " is:issue is:", state), per_page = 1) %>%
+        httr2::req_headers(Accept = "application/vnd.github+json") %>%
+        httr2::req_user_agent("rdevdash") %>%
+        httr2::req_timeout(8) %>%
+        httr2::req_perform()
+      body <- httr2::resp_body_json(response)
+      if (isTRUE(body$incomplete_results) || !is.numeric(body$total_count) ||
+          length(body$total_count) != 1 || !is.finite(body$total_count) || body$total_count < 0) {
+        stop("GitHub returned incomplete or invalid issue counts.", call. = FALSE)
+      }
+      body$total_count
+    }, numeric(1))
+    counts
+  })
 }
 
 check_levels <- c("OK", "NOTE", "WARN", "ERROR", "FAIL")
